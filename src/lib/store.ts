@@ -50,7 +50,11 @@ function missingWriteConfigError(action: string) {
 }
 
 function supabaseUrl() {
-  return process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? "";
+  return (
+    process.env.SUPABASE_URL?.trim() ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ||
+    ""
+  );
 }
 
 function publicSupabaseKey() {
