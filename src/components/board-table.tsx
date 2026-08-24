@@ -56,10 +56,10 @@ export function BoardTable({ listings }: { listings: RankedListing[] }) {
         const icon = faviconSize(listing.rank);
         return (
           <li key={listing.id}>
-            <article className={cn("flex items-center border", rankShell(listing.rank))}>
+            <article className={cn("flex items-start border", rankShell(listing.rank))}>
               <span
                 className={cn(
-                  "inline-flex shrink-0 items-center justify-center rounded-lg font-semibold tabular-nums",
+                  "mt-0.5 inline-flex shrink-0 items-center justify-center rounded-lg font-semibold tabular-nums",
                   rankBadge(listing.rank),
                 )}
               >
@@ -72,10 +72,10 @@ export function BoardTable({ listings }: { listings: RankedListing[] }) {
                   alt=""
                   width={listing.rank === 1 ? 48 : listing.rank <= 3 ? 44 : 32}
                   height={listing.rank === 1 ? 48 : listing.rank <= 3 ? 44 : 32}
-                  className={cn("shrink-0 rounded-lg", icon)}
+                  className={cn("mt-0.5 shrink-0 rounded-lg", icon)}
                 />
               ) : (
-                <div className={cn("shrink-0 rounded-lg bg-muted", icon)} />
+                <div className={cn("mt-0.5 shrink-0 rounded-lg bg-muted", icon)} />
               )}
               <div className="min-w-0 flex-1">
                 <p
@@ -89,8 +89,8 @@ export function BoardTable({ listings }: { listings: RankedListing[] }) {
                 {listing.description ? (
                   <p
                     className={cn(
-                      "mt-0.5 truncate text-muted-foreground",
-                      top ? "text-[13px]" : "text-[12px]",
+                      "mt-0.5 whitespace-normal break-words text-muted-foreground",
+                      top ? "text-[13px] leading-5" : "text-[12px] leading-[18px]",
                     )}
                   >
                     {listing.description}
@@ -111,7 +111,7 @@ export function BoardTable({ listings }: { listings: RankedListing[] }) {
               <Link
                 href={`/?claim=${listing.id}&amount=${listing.claimPriceUsd}`}
                 className={cn(
-                  "shrink-0 text-right font-semibold tabular-nums hover:text-bid",
+                  "mt-0.5 shrink-0 text-right font-semibold tabular-nums hover:text-bid",
                   listing.rank === 1 ? "text-2xl text-bid" : top ? "text-xl text-foreground" : "text-lg text-foreground",
                 )}
                 title={`Outbid ${displayHost(listing.url)}`}
