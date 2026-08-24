@@ -280,7 +280,7 @@ export async function verifyCrossmintSignature(
   signature: string | null,
 ): Promise<boolean> {
   const secret = serverEnv("CROSSMINT_WEBHOOK_SECRET");
-  if (!secret) return true;
+  if (!secret) return false;
   if (!signature) return false;
   const key = await crypto.subtle.importKey(
     "raw",

@@ -1,13 +1,18 @@
+import { limiter, limitResponse } from "@/lib/rate-limit";
+import { clientIp, UUID_RE } from "@/lib/request";
 import { heartbeat } from "@/lib/store";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-export async function POST() {
+export async function POST(req: Request) {
+  const gate = limiter().hit(`presence:${clientIp(req)}`, { max: 10, windowMs: 60_000 });
+  if (!gate.ok) return limitResponse(gate.retryAfterSec);
+
   try {
     const jar = await cookies();
     let id = jar.get("lb_vid")?.value;
-    const isNew = !id;
-    if (!id) id = crypto.randomUUID();
+    if (!id || !UUID_RE.test(id)) id = crypto.randomUUID();
+    const isNew = !jar.get("lb_vid")?.value || !UUID_RE.test(jar.get("lb_vid")?.value ?? "");
     const stats = await heartbeat(id, isNew);
     const res = NextResponse.json(stats);
     if (isNew) {

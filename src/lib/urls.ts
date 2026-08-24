@@ -45,6 +45,7 @@ function parseHandle(raw: string): string | null {
 export function normalizeTarget(input: string): NormalizedTarget | null {
   const raw = input.trim();
   if (!raw) return null;
+  if (raw.length > 2048) return null;
 
   const handle = parseHandle(raw);
   if (handle) {

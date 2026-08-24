@@ -28,6 +28,10 @@
 /another rec-fix.jpg
 /longbid logo.jpg
 /Screenshot *.png
+payload.json
+prod-body.txt
+*.jpg
+!public/**
 
 # debug
 npm-debug.log*

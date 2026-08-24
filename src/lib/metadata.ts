@@ -20,10 +20,14 @@ function decode(value: string): string {
     .trim();
 }
 
+function cap(value: string, max: number): string {
+  return value.trim().slice(0, max);
+}
+
 export async function fetchSiteMeta(url: string): Promise<SiteMeta> {
   const fallbackHost = new URL(url).hostname.replace(/^www\./, "");
   const fallback: SiteMeta = {
-    name: fallbackHost,
+    name: cap(fallbackHost, 120),
     description: "",
     faviconUrl: `https://www.google.com/s2/favicons?domain=${fallbackHost}&sz=64`,
     ogImageUrl: null,
@@ -73,8 +77,8 @@ export async function fetchSiteMeta(url: string): Promise<SiteMeta> {
     };
 
     return {
-      name: pick("og:site_name", "og:title", "twitter:title") ?? decode(title ?? fallbackHost),
-      description: pick("og:description", "description", "twitter:description") ?? "",
+      name: cap(pick("og:site_name", "og:title", "twitter:title") ?? decode(title ?? fallbackHost), 120),
+      description: cap(pick("og:description", "description", "twitter:description") ?? "", 280),
       faviconUrl: resolve(icon) ?? fallback.faviconUrl,
       ogImageUrl: resolve(pick("og:image", "twitter:image")),
     };

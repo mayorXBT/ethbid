@@ -27,4 +27,8 @@ describe("normalizeTarget", () => {
     const n = normalizeTarget("https://apps.apple.com/us/app/phantom-crypto-wallet/id1598432977?uo=4");
     expect(n?.canonicalKey).toBe("ios:1598432977");
   });
+
+  it("rejects oversized targets", () => {
+    expect(normalizeTarget(`https://${"a".repeat(2_050)}.com`)).toBeNull();
+  });
 });
