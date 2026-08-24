@@ -77,7 +77,7 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
     <form onSubmit={onSubmit} className="grid gap-6">
       <div>
         <p className="text-[11px] uppercase tracking-[0.22em] text-bid">Crypto products only</p>
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+        <h1 className="mt-2 text-[2rem] font-semibold tracking-tight text-foreground sm:text-5xl">
           Rank is the bid.
         </h1>
         <p className="mt-3 max-w-lg text-sm text-muted-foreground">
@@ -86,13 +86,13 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
         </p>
       </div>
 
-      <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_10.5rem_auto_auto] md:items-center">
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-[minmax(0,1fr)_10.5rem_auto_auto] md:items-center">
         <Input
           name="target"
           required
           placeholder="product URL or @handle"
           autoComplete="url"
-          className="h-12 rounded-xl px-4"
+          className="col-span-2 h-12 rounded-xl px-4 md:col-span-1"
         />
         <div className="relative">
           <Select
@@ -157,7 +157,7 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
             +
           </button>
         </div>
-        <Button type="submit" disabled={pending} className="h-12 rounded-full px-8">
+        <Button type="submit" disabled={pending} className="col-span-2 h-12 rounded-full px-8 md:col-span-1">
           {pending ? "Opening…" : "Place bid"}
         </Button>
       </div>

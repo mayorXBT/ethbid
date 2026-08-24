@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { MobileNav } from "@/components/mobile-nav";
 import { getStats } from "@/lib/store";
 
 export async function Header() {
@@ -13,18 +14,18 @@ export async function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background/90 backdrop-blur">
-      <div className="mx-auto grid max-w-5xl grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 py-3">
-        <Link href="/" className="flex min-w-0 items-center gap-2.5 justify-self-start">
+      <div className="mx-auto grid max-w-5xl grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3">
+        <Link href="/" className="flex min-w-0 items-center gap-2 justify-self-start">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-bid.png" alt="" width={32} height={32} className="h-8 w-8 shrink-0" />
-          <span className="truncate text-base font-semibold tracking-tight text-foreground">
+          <img src="/logo-bid.png" alt="" width={32} height={32} className="h-7 w-7 shrink-0 sm:h-8 sm:w-8" />
+          <span className="truncate text-sm font-semibold tracking-tight text-foreground sm:text-base">
             Longbid
             <span className="hidden text-muted-foreground sm:inline">.lol</span>
           </span>
         </Link>
 
         <div
-          className="flex items-center rounded-full border border-line bg-panel px-2 py-1 text-[11px] sm:px-3 sm:text-[12px]"
+          className="mx-auto flex max-w-full items-center justify-center overflow-hidden rounded-full border border-line bg-panel px-2 py-1 text-[11px] sm:px-3 sm:text-[12px]"
           title="Live = unique browsers in the last 60 seconds. Visitors = unique browsers ever. Clicks = outbound through listings."
         >
           <span className="inline-flex items-center gap-1.5 font-medium text-bid">
@@ -44,18 +45,21 @@ export async function Header() {
           </span>
         </div>
 
-        <nav className="flex items-center justify-end gap-3 text-[11px] uppercase tracking-[0.14em] text-muted-foreground sm:gap-4 sm:text-[12px]">
-          <Link href="/" className="hidden hover:text-bid sm:inline">
-            Board
-          </Link>
-          <Link href="/rules" className="hover:text-bid">
-            Rules
-          </Link>
-          <Link href="/about" className="hover:text-bid">
-            About
-          </Link>
-          <ThemeToggle />
-        </nav>
+        <div className="justify-self-end">
+          <nav className="hidden items-center justify-end gap-4 text-[12px] uppercase tracking-[0.14em] text-muted-foreground md:flex">
+            <Link href="/" className="hover:text-bid">
+              Board
+            </Link>
+            <Link href="/rules" className="hover:text-bid">
+              Rules
+            </Link>
+            <Link href="/about" className="hover:text-bid">
+              About
+            </Link>
+            <ThemeToggle />
+          </nav>
+          <MobileNav />
+        </div>
       </div>
     </header>
   );

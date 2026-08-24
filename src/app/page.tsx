@@ -24,7 +24,7 @@ export default async function HomePage() {
       <Header />
       <LiveRefresh />
       <main className="mx-auto max-w-5xl px-4 pb-24">
-        <section className="border-b border-line py-10">
+        <section className="border-b border-line py-6 sm:py-10">
           <Suspense>
             <PaidFlash />
           </Suspense>
