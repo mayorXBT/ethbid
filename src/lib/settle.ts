@@ -36,6 +36,13 @@ export async function settleIfFunded(
   if (!bid) throw new Error("Unknown bid.");
   const { bid: withDeposit, deposits } = await prepareDeposit(bid);
   if (withDeposit.status === "paid") {
+    const received = await receivedUsdc(deposits);
+    if (paymentCovered(received, withDeposit.amountDueUsd)) {
+      const sweep = await sweepToTreasury(deposits, withDeposit.amountDueUsd);
+      if (sweep.errors.length > 0) {
+        console.error("Treasury sweep retry failed.", sweep.errors);
+      }
+    }
     return { bid: withDeposit, deposits, received: withDeposit.amountDueUsd, settled: true };
   }
   const received = await receivedUsdc(deposits);
