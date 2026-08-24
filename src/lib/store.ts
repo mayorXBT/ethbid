@@ -3,7 +3,7 @@ import path from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { isBuildPhase, pg } from "./pg";
 import { rankListings, topBidUsd } from "./ranking";
-import { isPrivilegedSupabaseKey } from "./supabase-key";
+import { describeSupabaseWriteKey, isPrivilegedSupabaseKey } from "./supabase-key";
 import type {
   ActivityItem,
   Bid,
@@ -42,8 +42,9 @@ function fileWritesAllowed() {
 }
 
 function missingWriteConfigError(action: string) {
+  const kind = describeSupabaseWriteKey(process.env.SUPABASE_SERVICE_ROLE_KEY);
   return new Error(
-    `Cannot ${action}. Set SUPABASE_SERVICE_ROLE_KEY to the service_role secret from Supabase, not the publishable key.`,
+    `Cannot ${action}. SUPABASE_SERVICE_ROLE_KEY on the server is ${kind}; need the service_role secret from Supabase (not the publishable key).`,
   );
 }
 
@@ -61,7 +62,7 @@ function publicSupabaseKey() {
 function supabaseFromKey(key: string | undefined): SupabaseClient | null {
   if (isBuildPhase()) return null;
   const url = supabaseUrl();
-  const trimmed = key?.trim();
+  const trimmed = key?.trim().replace(/^["']|["']$/g, "");
   if (!url || !trimmed || !url.startsWith("http")) return null;
   return createClient(url, trimmed, { auth: { persistSession: false } });
 }
