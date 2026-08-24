@@ -11,7 +11,7 @@ function listedAt(iso: string): string {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-  });
+  }).replace(",", "");
 }
 
 export function BoardTable({ listings }: { listings: RankedListing[] }) {
@@ -29,56 +29,59 @@ export function BoardTable({ listings }: { listings: RankedListing[] }) {
         <li key={listing.id}>
           <article
             className={cn(
-              "relative flex items-center gap-3 border border-line bg-panel px-4 py-3 sm:gap-4 sm:px-5",
-              listing.rank === 1 && "bg-bid/[0.07]",
+              "flex items-center gap-2.5 border border-line bg-panel px-3 py-2.5 sm:gap-3 sm:px-4",
+              listing.rank === 1 && "bg-bid/[0.06]",
             )}
           >
-            {listing.rank === 1 ? <span className="absolute inset-y-0 left-0 w-0.5 bg-bid" /> : null}
-            <div
+            <span
               className={cn(
-                "w-10 shrink-0 text-xl tabular-nums",
-                listing.rank === 1 ? "text-bid" : listing.rank <= 3 ? "text-cyan" : "text-muted-foreground",
+                "inline-flex h-8 shrink-0 items-center justify-center rounded-md px-2 text-xs font-semibold tabular-nums",
+                listing.rank === 1
+                  ? "bg-bid/15 text-bid"
+                  : listing.rank <= 3
+                    ? "bg-cyan/10 text-cyan"
+                    : "bg-muted text-muted-foreground",
               )}
             >
-              {listing.rank}
-            </div>
-            {listing.faviconUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={listing.faviconUrl}
-                alt=""
-                width={36}
-                height={36}
-                className="h-9 w-9 rounded-sm bg-void"
-              />
-            ) : (
-              <div className="h-9 w-9 shrink-0 rounded-sm bg-muted" />
-            )}
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-foreground">
-                {listing.name}
-                {listing.description ? (
-                  <span className="font-normal text-muted-foreground"> — {listing.description}</span>
-                ) : null}
-              </p>
-              <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                {displayHost(listing.url)}
-              </p>
-              <p className="mt-1 truncate text-[11px] text-muted-foreground">
-                {categoryLabel(listing.category)}
-                {" · "}
-                {listedAt(listing.updatedAt)}
-                {" · "}
-                {listing.clickCount.toLocaleString()} clicks
-                {" · "}
-                <Link href={`/go/${listing.id}`} className="underline-offset-2 hover:text-bid hover:underline">
-                  see details
-                </Link>
-              </p>
+              #{listing.rank}
+            </span>
+            <div className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl border border-line bg-void/40 px-3 py-2.5">
+              {listing.faviconUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={listing.faviconUrl}
+                  alt=""
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 shrink-0 rounded-md bg-void"
+                />
+              ) : (
+                <div className="h-8 w-8 shrink-0 rounded-md bg-muted" />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-foreground">
+                  {listing.name}
+                  {listing.description ? (
+                    <span className="font-normal text-muted-foreground"> — {listing.description}</span>
+                  ) : null}
+                </p>
+                <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                  {categoryLabel(listing.category)}
+                  {" · "}
+                  {listedAt(listing.updatedAt)}
+                  {" · "}
+                  {listing.clickCount.toLocaleString()} clicks
+                  {" · "}
+                  <Link href={`/go/${listing.id}`} className="underline-offset-2 hover:text-bid hover:underline">
+                    see details
+                  </Link>
+                </p>
+              </div>
             </div>
             <Link
               href={`/?claim=${listing.id}&amount=${listing.claimPriceUsd}`}
               className="shrink-0 text-right text-lg font-semibold tabular-nums text-foreground hover:text-bid"
+              title={`Outbid ${displayHost(listing.url)}`}
             >
               {formatUsd(listing.bidUsd)}
             </Link>
