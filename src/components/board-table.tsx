@@ -29,54 +29,50 @@ export function BoardTable({ listings }: { listings: RankedListing[] }) {
         <li key={listing.id}>
           <article
             className={cn(
-              "flex items-center gap-2.5 border border-line bg-panel px-3 py-2.5 sm:gap-3 sm:px-4",
-              listing.rank === 1 && "bg-bid/[0.06]",
+              "flex items-center gap-3 rounded-2xl border border-line bg-panel px-4 py-3 sm:gap-4 sm:px-5 sm:py-3.5",
+              listing.rank === 1 && "border-bid/35 bg-bid/[0.08]",
             )}
           >
             <span
               className={cn(
-                "inline-flex h-8 shrink-0 items-center justify-center rounded-md px-2 text-xs font-semibold tabular-nums",
+                "inline-flex h-8 shrink-0 items-center justify-center rounded-lg px-2 text-xs font-semibold tabular-nums",
                 listing.rank === 1
-                  ? "bg-bid/15 text-bid"
+                  ? "bg-bid/20 text-bid"
                   : listing.rank <= 3
                     ? "bg-cyan/10 text-cyan"
-                    : "bg-muted text-muted-foreground",
+                    : "text-muted-foreground",
               )}
             >
               #{listing.rank}
             </span>
-            <div className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl border border-line bg-void/40 px-3 py-2.5">
-              {listing.faviconUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={listing.faviconUrl}
-                  alt=""
-                  width={32}
-                  height={32}
-                  className="h-8 w-8 shrink-0 rounded-md bg-void"
-                />
-              ) : (
-                <div className="h-8 w-8 shrink-0 rounded-md bg-muted" />
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-foreground">
-                  {listing.name}
-                  {listing.description ? (
-                    <span className="font-normal text-muted-foreground"> — {listing.description}</span>
-                  ) : null}
-                </p>
-                <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                  {categoryLabel(listing.category)}
-                  {" · "}
-                  {listedAt(listing.updatedAt)}
-                  {" · "}
-                  {listing.clickCount.toLocaleString()} clicks
-                  {" · "}
-                  <Link href={`/go/${listing.id}`} className="underline-offset-2 hover:text-bid hover:underline">
-                    see details
-                  </Link>
-                </p>
-              </div>
+            {listing.faviconUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={listing.faviconUrl}
+                alt=""
+                width={40}
+                height={40}
+                className="h-10 w-10 shrink-0 rounded-lg"
+              />
+            ) : (
+              <div className="h-10 w-10 shrink-0 rounded-lg bg-muted" />
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold tracking-tight text-foreground">{listing.name}</p>
+              {listing.description ? (
+                <p className="mt-0.5 truncate text-[12px] text-muted-foreground">{listing.description}</p>
+              ) : null}
+              <p className="mt-1 truncate text-[11px] text-muted-foreground">
+                {categoryLabel(listing.category)}
+                {" · "}
+                {listedAt(listing.updatedAt)}
+                {" · "}
+                {listing.clickCount.toLocaleString()} clicks
+                {" · "}
+                <Link href={`/go/${listing.id}`} className="underline-offset-2 hover:text-bid hover:underline">
+                  see details
+                </Link>
+              </p>
             </div>
             <Link
               href={`/?claim=${listing.id}&amount=${listing.claimPriceUsd}`}
