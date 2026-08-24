@@ -1,4 +1,4 @@
-export const MIN_NEW_BID_USD = 1;
+export const MIN_NEW_BID_USD = 5;
 export const MAX_BID_USD = 999_999;
 export const TOP_SPOT_PREMIUM_USD = 1;
 

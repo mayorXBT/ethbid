@@ -19,9 +19,9 @@ export default async function RulesPage() {
 
         <h2 className="mt-10 font-mono text-[11px] uppercase tracking-[0.22em] text-mute">How ranking works</h2>
         <ul className="mt-4 space-y-3 text-sm leading-6 text-ink/90">
-          <li>New listings are whole USDC, $1 minimum, $999,999 maximum, $1 at a time.</li>
+          <li>New listings are whole USDC, $5 minimum, $999,999 maximum, $1 at a time.</li>
           <li>Bids already on the board keep their amount until they raise or get outranked.</li>
-          <li>Taking #1 costs at least $1 more than the current top bid.</li>
+          <li>Taking #1 costs at least $1 more than the current top bid, and never less than the $5 floor.</li>
           <li>Paying less still puts you on the board at whatever rank that bid can take.</li>
           <li>Equal bids stay in the order they were placed — the older bid keeps the higher rank.</li>
           <li>Raise an existing listing by paying only the difference.</li>

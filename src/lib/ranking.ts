@@ -26,10 +26,12 @@ export function topBidUsd(listings: Listing[]): number {
 
 export function claimPriceForRank(sortedDesc: Listing[], rank: number): number {
   if (sortedDesc.length === 0) return MIN_NEW_BID_USD;
-  if (rank <= 1) return sortedDesc[0].bidUsd + TOP_SPOT_PREMIUM_USD;
+  if (rank <= 1) {
+    return Math.max(MIN_NEW_BID_USD, sortedDesc[0].bidUsd + TOP_SPOT_PREMIUM_USD);
+  }
   const target = sortedDesc[rank - 1];
   if (!target) return MIN_NEW_BID_USD;
-  return target.bidUsd + 1;
+  return Math.max(MIN_NEW_BID_USD, target.bidUsd + 1);
 }
 
 export function rankForBid(listings: Listing[], bidUsd: number, createdAt?: string): number {

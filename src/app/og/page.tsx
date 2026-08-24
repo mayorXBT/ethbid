@@ -41,7 +41,7 @@ export default function OgCardPage() {
           </div>
 
           <div className="flex items-center justify-end gap-5">
-            <p className="text-[18px] text-[#8b93a1]">Pay more. Rank higher. Floor $1 USDC.</p>
+            <p className="text-[18px] text-[#8b93a1]">Pay more. Rank higher. Floor $5 USDC.</p>
             <span className="bg-[#3dff9a] px-6 py-3 text-[18px] font-semibold uppercase tracking-[0.14em] text-[#07080a]">
               Place bid
             </span>

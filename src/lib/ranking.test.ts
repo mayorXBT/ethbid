@@ -38,6 +38,13 @@ describe("rankListings", () => {
     expect(ranked[0].claimPriceUsd).toBe(101);
     expect(ranked[1].claimPriceUsd).toBe(21);
   });
+
+  it("never prices a claim below the $5 new-listing floor", () => {
+    const ranked = rankListings([
+      listing({ id: "cheap", bidUsd: 1, createdAt: "2026-08-01T00:00:00.000Z" }),
+    ]);
+    expect(ranked[0].claimPriceUsd).toBe(MIN_NEW_BID_USD);
+  });
 });
 
 describe("quoteBid", () => {
@@ -45,10 +52,10 @@ describe("quoteBid", () => {
     listing({ id: "top", bidUsd: 50, createdAt: "2026-08-01T00:00:00.000Z" }),
   ];
 
-  it("clamps sub-dollar requests up to the $1 floor", () => {
-    const q = quoteBid({ listings: board, requestedUsd: 0 });
-    expect(q.ok).toBe(true);
-    if (q.ok) expect(q.amountDueUsd).toBe(MIN_NEW_BID_USD);
+  it("rejects new bids under the $5 floor", () => {
+    const q = quoteBid({ listings: board, requestedUsd: 1 });
+    expect(q.ok).toBe(false);
+    if (!q.ok) expect(q.error).toContain(String(MIN_NEW_BID_USD));
   });
 
   it("lets a small bid sit at the bottom", () => {

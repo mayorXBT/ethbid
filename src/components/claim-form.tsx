@@ -11,14 +11,13 @@ import { FormEvent, useState } from "react";
 export function ClaimForm({ defaultBid }: { defaultBid: number }) {
   const router = useRouter();
   const params = useSearchParams();
+  const min = MIN_NEW_BID_USD;
   const seeded = Number(params.get("amount") ?? "");
-  const start = Number.isFinite(seeded) && seeded >= 1 ? seeded : defaultBid;
+  const start = Number.isFinite(seeded) && seeded >= min ? seeded : defaultBid;
   const [amount, setAmount] = useState(start);
   const [draft, setDraft] = useState(String(start));
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-
-  const min = MIN_NEW_BID_USD;
 
   function setBid(n: number) {
     const next = Math.min(MAX_BID_USD, Math.max(min, Math.floor(n)));

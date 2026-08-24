@@ -44,7 +44,7 @@ export function BoardTable({ listings }: { listings: RankedListing[] }) {
   if (listings.length === 0) {
     return (
       <div className="border border-dashed border-line px-6 py-16 text-center text-sm text-muted-foreground">
-        Board is empty. First $1 USDC listing takes #1.
+        Board is empty. First $5 USDC listing takes #1.
       </div>
     );
   }
