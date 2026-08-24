@@ -6,7 +6,12 @@ export function databaseUrl(): string {
   return process.env.DATABASE_URL?.trim() ?? "";
 }
 
+export function isBuildPhase() {
+  return process.env.NEXT_PHASE === "phase-production-build";
+}
+
 export function pg() {
+  if (isBuildPhase()) return null;
   const url = databaseUrl();
   if (!url) return null;
   // New Supabase projects resolve db.*.supabase.co to IPv6 only. Skip when we cannot use it.

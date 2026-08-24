@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { pg } from "./pg";
+import { isBuildPhase, pg } from "./pg";
 import { rankListings, topBidUsd } from "./ranking";
 import type {
   ActivityItem,
@@ -37,6 +37,7 @@ function emptyStore(): StoreShape {
 }
 
 function supabase(): SupabaseClient | null {
+  if (isBuildPhase()) return null;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const key = (
     process.env.SUPABASE_SERVICE_ROLE_KEY ??
