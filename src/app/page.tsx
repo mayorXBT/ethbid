@@ -34,12 +34,9 @@ export default async function HomePage() {
         </section>
 
         <section className="pt-8">
-          <div className="mb-4 flex items-end justify-between">
-            <h2 className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Book</h2>
-            <p className="text-[11px] text-muted-foreground">
-              {board.listings.length} names · {formatUsd(board.stats.volumeUsd)} USDC locked
-            </p>
-          </div>
+          <p className="mb-4 text-right text-[11px] text-muted-foreground">
+            {board.listings.length} names · {formatUsd(board.stats.volumeUsd)} USDC locked
+          </p>
           <BoardTable listings={board.listings} />
           <ActivityFeed items={board.activity} />
         </section>

@@ -10,6 +10,7 @@ html[data-theme="dark"] {
   --bid: #3dff9a;
   --cyan: #67e8f9;
   --heat: #ff4d6d;
+  --bronze: #e0a54b;
   --background: #07080a;
   --foreground: var(--ink);
   --card: var(--panel);
@@ -33,6 +34,7 @@ html[data-theme="light"] {
   --bid: #0b8f52;
   --cyan: #0e7490;
   --heat: #c81e4a;
+  --bronze: #b45309;
   --background: #f3f6f4;
   --foreground: var(--ink);
   --card: var(--panel);
@@ -56,6 +58,7 @@ html[data-theme="light"] {
   --color-bid: var(--bid);
   --color-cyan: var(--cyan);
   --color-heat: var(--heat);
+  --color-bronze: var(--bronze);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
