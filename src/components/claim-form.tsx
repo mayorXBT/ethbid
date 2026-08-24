@@ -49,9 +49,20 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
           amount: bidUsd,
         }),
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data: { error?: string; bid?: { id?: string } } = {};
+      try {
+        data = JSON.parse(text) as { error?: string; bid?: { id?: string } };
+      } catch {
+        setError("Could not open checkout.");
+        return;
+      }
       if (!res.ok) {
         setError(data.error ?? "Could not open checkout.");
+        return;
+      }
+      if (!data.bid?.id) {
+        setError("Could not open checkout.");
         return;
       }
       router.push(`/pay/${data.bid.id}`);

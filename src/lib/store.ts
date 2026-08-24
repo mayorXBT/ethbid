@@ -3,6 +3,7 @@ import path from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { isBuildPhase, pg } from "./pg";
 import { rankListings, topBidUsd } from "./ranking";
+import { isPrivilegedSupabaseKey } from "./supabase-key";
 import type {
   ActivityItem,
   Bid,
@@ -36,20 +37,51 @@ function emptyStore(): StoreShape {
   };
 }
 
-function supabase(): SupabaseClient | null {
-  if (isBuildPhase()) return null;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const key = (
-    process.env.SUPABASE_SERVICE_ROLE_KEY ??
+function fileWritesAllowed() {
+  return !process.env.VERCEL;
+}
+
+function missingWriteConfigError(action: string) {
+  return new Error(
+    `Cannot ${action}. Set SUPABASE_SERVICE_ROLE_KEY to the service_role secret from Supabase, not the publishable key.`,
+  );
+}
+
+function supabaseUrl() {
+  return process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? "";
+}
+
+function publicSupabaseKey() {
+  return (
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
   )?.trim();
-  if (!url || !key || !url.startsWith("http")) return null;
-  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+function supabaseFromKey(key: string | undefined): SupabaseClient | null {
+  if (isBuildPhase()) return null;
+  const url = supabaseUrl();
+  const trimmed = key?.trim();
+  if (!url || !trimmed || !url.startsWith("http")) return null;
+  return createClient(url, trimmed, { auth: { persistSession: false } });
+}
+
+function supabaseAdmin(): SupabaseClient | null {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!isPrivilegedSupabaseKey(key)) return null;
+  return supabaseFromKey(key);
+}
+
+function supabase(): SupabaseClient | null {
+  return supabaseAdmin() ?? supabaseFromKey(publicSupabaseKey());
 }
 
 async function loadFile(): Promise<StoreShape> {
   if (g.__longbidStore) return g.__longbidStore;
+  if (!fileWritesAllowed()) {
+    g.__longbidStore = emptyStore();
+    return g.__longbidStore;
+  }
   try {
     const raw = await readFile(DATA_PATH, "utf8");
     g.__longbidStore = JSON.parse(raw) as StoreShape;
@@ -61,7 +93,7 @@ async function loadFile(): Promise<StoreShape> {
 }
 
 async function persist() {
-  if (!g.__longbidStore) return;
+  if (!g.__longbidStore || !fileWritesAllowed()) return;
   await mkdir(path.dirname(DATA_PATH), { recursive: true });
   await writeFile(DATA_PATH, JSON.stringify(g.__longbidStore, null, 2), "utf8");
 }
@@ -125,13 +157,17 @@ export async function getListingById(id: string): Promise<Listing | null> {
 export async function getBid(id: string): Promise<Bid | null> {
   const sql = pg();
   if (sql) {
-    const rows = await sql`select * from bids where id = ${id} limit 1`;
-    return rows[0] ? bidFromRow(rows[0] as Record<string, unknown>) : null;
+    try {
+      const rows = await sql`select * from bids where id = ${id} limit 1`;
+      if (rows[0]) return bidFromRow(rows[0] as Record<string, unknown>);
+    } catch {
+      // fall through
+    }
   }
-  const sb = supabase();
+  const sb = supabaseAdmin() ?? supabase();
   if (sb) {
     const { data, error } = await sb.from("bids").select("*").eq("id", id).maybeSingle();
-    if (!error) return data ? bidFromRow(data) : null;
+    if (!error && data) return bidFromRow(data);
   }
   const store = await loadFile();
   return store.bids.find((b) => b.id === id) ?? null;
@@ -140,15 +176,21 @@ export async function getBid(id: string): Promise<Bid | null> {
 export async function createBid(bid: Bid): Promise<Bid> {
   const sql = pg();
   if (sql) {
-    const row = bidToRow(bid);
-    await sql`insert into bids ${sql(row)}`;
-    return bid;
+    try {
+      const row = bidToRow(bid);
+      await sql`insert into bids ${sql(row)}`;
+      return bid;
+    } catch {
+      // fall through
+    }
   }
-  const sb = supabase();
+  const sb = supabaseAdmin();
   if (sb) {
     const { error } = await sb.from("bids").insert(bidToRow(bid));
-    if (!error) return bid;
+    if (error) throw new Error(error.message);
+    return bid;
   }
+  if (!fileWritesAllowed()) throw missingWriteConfigError("save bid");
   return mutate((s) => {
     s.bids.push(bid);
     return bid;
@@ -161,12 +203,13 @@ export async function attachOrderId(bidId: string, orderId: string): Promise<voi
     await sql`update bids set crossmint_order_id = ${orderId} where id = ${bidId}`;
     return;
   }
-  const sb = supabase();
+  const sb = supabaseAdmin();
   if (sb) {
     const { error } = await sb.from("bids").update({ crossmint_order_id: orderId }).eq("id", bidId);
     if (error) throw error;
     return;
   }
+  if (!fileWritesAllowed()) throw missingWriteConfigError("attach order");
   await mutate((s) => {
     const bid = s.bids.find((b) => b.id === bidId);
     if (bid) bid.crossmintOrderId = orderId;
@@ -188,7 +231,7 @@ export async function patchBidDeposits(
     `;
     return getBid(bidId);
   }
-  const sb = supabase();
+  const sb = supabaseAdmin();
   if (sb) {
     const { data, error } = await sb
       .from("bids")
@@ -203,6 +246,7 @@ export async function patchBidDeposits(
     if (error) throw error;
     return data ? bidFromRow(data) : null;
   }
+  if (!fileWritesAllowed()) throw missingWriteConfigError("save deposit addresses");
   return mutate((s) => {
     const bid = s.bids.find((b) => b.id === bidId);
     if (!bid) return null;
@@ -221,7 +265,7 @@ export async function getBidByDepositAddress(address: string): Promise<Bid | nul
     `;
     return rows[0] ? bidFromRow(rows[0] as Record<string, unknown>) : null;
   }
-  const sb = supabase();
+  const sb = supabaseAdmin() ?? supabase();
   if (sb) {
     const { data, error } = await sb
       .from("bids")
@@ -229,7 +273,7 @@ export async function getBidByDepositAddress(address: string): Promise<Bid | nul
       .or(`deposit_evm.eq.${address},deposit_sol.eq.${address}`)
       .maybeSingle();
     if (error) throw error;
-    return data ? bidFromRow(data) : null;
+    if (data) return bidFromRow(data);
   }
   const store = await loadFile();
   return store.bids.find((b) => b.depositEvm === address || b.depositSol === address) ?? null;
@@ -343,7 +387,7 @@ export async function applyPaidBid(opts: {
     return result;
   }
 
-  const sb = supabase();
+  const sb = supabaseAdmin();
   if (sb) {
     const local: { listings: Listing[]; bids: Bid[]; activity: ActivityItem[] } = {
       listings: await getListings(),
@@ -354,10 +398,14 @@ export async function applyPaidBid(opts: {
     local.bids = (bids ?? []).map(bidFromRow);
     const result = await apply(local);
     if (!result) return null;
-    await sb.from("listings").upsert(toRow(result.listing));
+    const listingRes = await sb.from("listings").upsert(toRow(result.listing));
+    if (listingRes.error) throw new Error(listingRes.error.message);
     const bid = local.bids.find((b) => b.id === opts.bidId || b.crossmintOrderId === opts.orderId);
-    if (bid) await sb.from("bids").update(bidToRow(bid)).eq("id", bid.id);
-    await sb.from("activity").insert({
+    if (bid) {
+      const bidRes = await sb.from("bids").update(bidToRow(bid)).eq("id", bid.id);
+      if (bidRes.error) throw new Error(bidRes.error.message);
+    }
+    const activityRes = await sb.from("activity").insert({
       id: result.activity.id,
       listing_id: result.activity.listingId,
       name: result.activity.name,
@@ -366,9 +414,11 @@ export async function applyPaidBid(opts: {
       kind: result.activity.kind,
       created_at: result.activity.createdAt,
     });
+    if (activityRes.error) throw new Error(activityRes.error.message);
     return result;
   }
 
+  if (!fileWritesAllowed()) throw missingWriteConfigError("settle bid");
   return mutate((s) => apply(s));
 }
 
@@ -381,14 +431,16 @@ export async function incrementClicks(id: string): Promise<Listing | null> {
     `;
     return rows[0] ? fromRow(rows[0] as Record<string, unknown>) : null;
   }
-  const sb = supabase();
+  const sb = supabaseAdmin();
   if (sb) {
     const listing = await getListingById(id);
     if (!listing) return null;
     listing.clickCount += 1;
-    await sb.from("listings").update({ click_count: listing.clickCount }).eq("id", id);
+    const { error } = await sb.from("listings").update({ click_count: listing.clickCount }).eq("id", id);
+    if (error) throw new Error(error.message);
     return listing;
   }
+  if (!fileWritesAllowed()) return getListingById(id);
   return mutate((s) => {
     const listing = s.listings.find((l) => l.id === id);
     if (!listing) return null;
@@ -413,16 +465,18 @@ export async function patchListingMeta(
     `;
     return;
   }
-  const sb = supabase();
+  const sb = supabaseAdmin();
   if (sb) {
-    await sb.from("listings").update({
+    const { error } = await sb.from("listings").update({
       name: patch.name,
       description: patch.description,
       favicon_url: patch.faviconUrl,
       og_image_url: patch.ogImageUrl,
     }).eq("id", id);
+    if (error) throw new Error(error.message);
     return;
   }
+  if (!fileWritesAllowed()) return;
   await mutate((s) => {
     const listing = s.listings.find((l) => l.id === id);
     if (!listing) return;
@@ -444,7 +498,7 @@ export async function heartbeat(visitorId: string, isNewVisitor: boolean): Promi
       // fall through
     }
   }
-  const sb = supabase();
+  const sb = supabaseAdmin();
   if (sb) {
     const now = new Date().toISOString();
     const { error } = await sb.from("visitors").upsert(
@@ -453,6 +507,7 @@ export async function heartbeat(visitorId: string, isNewVisitor: boolean): Promi
     );
     if (!error) return getStats();
   }
+  if (!fileWritesAllowed()) return getStats();
   return mutate((s) => {
     const now = Date.now();
     s.presence[visitorId] = now;

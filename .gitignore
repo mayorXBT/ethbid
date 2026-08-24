@@ -39,7 +39,10 @@ yarn-error.log*
 .env
 .env.local
 .env*.local
+.vercel-env.local
 !.env.example
+scripts/.api-keys.json
+scripts/.api-keys.err
 
 # local leaderboard store
 .data/
