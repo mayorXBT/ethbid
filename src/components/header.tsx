@@ -24,15 +24,20 @@ export async function Header() {
         </Link>
 
         <div
-          className="flex items-center rounded-full border border-line bg-panel px-2.5 py-1 text-[12px] sm:px-3"
-          title="Live = unique browsers in the last 60 seconds. Clicks = outbound clicks through listings."
+          className="flex items-center rounded-full border border-line bg-panel px-2 py-1 text-[11px] sm:px-3 sm:text-[12px]"
+          title="Live = unique browsers in the last 60 seconds. Visitors = unique browsers ever. Clicks = outbound through listings."
         >
           <span className="inline-flex items-center gap-1.5 font-medium text-bid">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-bid" />
             {stats.online.toLocaleString()}
             <span className="hidden sm:inline"> Live</span>
           </span>
-          <span className="mx-2 h-3 w-px bg-line" />
+          <span className="mx-1.5 h-3 w-px bg-line sm:mx-2" />
+          <span className="inline-flex items-center gap-1 text-cyan">
+            {stats.visitors.toLocaleString()}
+            <span className="hidden sm:inline"> Visitors</span>
+          </span>
+          <span className="mx-1.5 h-3 w-px bg-line sm:mx-2" />
           <span className="inline-flex items-center gap-1 text-heat">
             {stats.clicks.toLocaleString()}
             <span className="hidden sm:inline"> Clicks</span>

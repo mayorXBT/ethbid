@@ -74,7 +74,7 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+    <form onSubmit={onSubmit} className="grid gap-6">
       <div>
         <p className="text-[11px] uppercase tracking-[0.22em] text-bid">Crypto products only</p>
         <h1 className="mt-2 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
@@ -86,51 +86,15 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
         </p>
       </div>
 
-      <div className="flex items-center gap-2 border border-line bg-panel px-3 py-2">
-        <button
-          type="button"
-          aria-label="Decrease bid"
-          className="flex h-9 w-9 items-center justify-center border border-line text-lg text-muted-foreground hover:border-bid hover:text-bid"
-          onClick={() => setBid(amount - 1)}
-        >
-          −
-        </button>
-        <label className="min-w-32 px-1 text-center">
-          <span className="block text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Bid</span>
-          <span className="flex items-baseline justify-center text-bid">
-            <span className="text-lg">$</span>
-            <input
-              name="amount"
-              inputMode="numeric"
-              autoComplete="off"
-              aria-label="Bid amount in USDC"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value.replace(/[^\d]/g, ""))}
-              onBlur={commitDraft}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  commitDraft();
-                }
-              }}
-              style={{ width: `${Math.max(2, draft.length || 1)}ch` }}
-              className="bg-transparent text-center text-2xl tabular-nums outline-none"
-            />
-          </span>
-        </label>
-        <button
-          type="button"
-          aria-label="Increase bid"
-          className="flex h-9 w-9 items-center justify-center border border-line text-lg text-muted-foreground hover:border-bid hover:text-bid"
-          onClick={() => setBid(amount + 1)}
-        >
-          +
-        </button>
-      </div>
-
-      <div className="grid gap-2 sm:grid-cols-[1fr_180px_auto] lg:col-span-2">
-        <Input name="target" required placeholder="product URL or @handle" autoComplete="url" />
-        <Select name="category" required defaultValue="">
+      <div className="grid gap-2 sm:grid-cols-[1fr_180px_minmax(11.5rem,auto)] sm:items-end">
+        <Input
+          name="target"
+          required
+          placeholder="product URL or @handle"
+          autoComplete="url"
+          className="sm:order-1"
+        />
+        <Select name="category" required defaultValue="" className="sm:order-2">
           <option value="" disabled>
             Category
           </option>
@@ -140,14 +104,57 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
             </option>
           ))}
         </Select>
-        <Button type="submit" disabled={pending} className="h-11 px-8">
-          {pending ? "Opening…" : "Place bid"}
-        </Button>
+        <div className="grid gap-2 sm:order-3">
+          <div className="flex h-11 items-center justify-between gap-2 border border-line bg-panel px-2">
+            <button
+              type="button"
+              aria-label="Decrease bid"
+              className="flex h-9 w-9 shrink-0 items-center justify-center border border-line text-lg text-muted-foreground hover:border-bid hover:text-bid"
+              onClick={() => setBid(amount - 1)}
+            >
+              −
+            </button>
+            <label className="min-w-0 flex-1 px-1 text-center">
+              <span className="block text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Bid</span>
+              <span className="flex items-baseline justify-center text-bid">
+                <span className="text-lg">$</span>
+                <input
+                  name="amount"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  aria-label="Bid amount in USDC"
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value.replace(/[^\d]/g, ""))}
+                  onBlur={commitDraft}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      commitDraft();
+                    }
+                  }}
+                  style={{ width: `${Math.max(2, draft.length || 1)}ch` }}
+                  className="bg-transparent text-center text-2xl tabular-nums outline-none"
+                />
+              </span>
+            </label>
+            <button
+              type="button"
+              aria-label="Increase bid"
+              className="flex h-9 w-9 shrink-0 items-center justify-center border border-line text-lg text-muted-foreground hover:border-bid hover:text-bid"
+              onClick={() => setBid(amount + 1)}
+            >
+              +
+            </button>
+          </div>
+          <Button type="submit" disabled={pending} className="h-11 w-full px-8">
+            {pending ? "Opening…" : "Place bid"}
+          </Button>
+        </div>
       </div>
       {error ? (
-        <p className="text-xs text-heat lg:col-span-2">{error}</p>
+        <p className="text-xs text-heat">{error}</p>
       ) : (
-        <p className="text-[11px] text-muted-foreground lg:col-span-2">
+        <p className="text-[11px] text-muted-foreground">
           Already listed? Same URL or @handle. You only pay the difference.
         </p>
       )}
