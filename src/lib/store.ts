@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { serverEnv } from "./env";
 import { pg } from "./pg";
 import { rankListings, topBidUsd } from "./ranking";
 import { describeSupabaseWriteKey, isPrivilegedSupabaseKey } from "./supabase-key";
@@ -38,11 +39,11 @@ function emptyStore(): StoreShape {
 }
 
 function fileWritesAllowed() {
-  return !process.env.VERCEL;
+  return serverEnv("VERCEL") !== "1";
 }
 
 function missingWriteConfigError(action: string) {
-  const kind = describeSupabaseWriteKey(process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const kind = describeSupabaseWriteKey(serverEnv("SUPABASE_SERVICE_ROLE_KEY"));
   const url = supabaseUrl() ? "set" : "missing";
   return new Error(
     `Cannot ${action}. SUPABASE_SERVICE_ROLE_KEY is ${kind}, NEXT_PUBLIC_SUPABASE_URL is ${url}. Need the service_role secret and project URL.`,
@@ -50,18 +51,11 @@ function missingWriteConfigError(action: string) {
 }
 
 function supabaseUrl() {
-  return (
-    process.env.SUPABASE_URL?.trim() ||
-    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ||
-    ""
-  );
+  return serverEnv("SUPABASE_URL") || serverEnv("NEXT_PUBLIC_SUPABASE_URL");
 }
 
 function publicSupabaseKey() {
-  return (
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-  )?.trim();
+  return serverEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY") || serverEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
 }
 
 function supabaseFromKey(key: string | undefined): SupabaseClient | null {
@@ -72,7 +66,7 @@ function supabaseFromKey(key: string | undefined): SupabaseClient | null {
 }
 
 function supabaseAdmin(): SupabaseClient | null {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const key = serverEnv("SUPABASE_SERVICE_ROLE_KEY");
   if (!isPrivilegedSupabaseKey(key)) return null;
   return supabaseFromKey(key);
 }

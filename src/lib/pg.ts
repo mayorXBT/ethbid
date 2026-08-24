@@ -1,13 +1,14 @@
 import postgres from "postgres";
+import { serverEnv } from "./env";
 
 const g = globalThis as unknown as { __longbidSql?: ReturnType<typeof postgres> };
 
 export function databaseUrl(): string {
-  return process.env.DATABASE_URL?.trim() ?? "";
+  return serverEnv("DATABASE_URL");
 }
 
 export function isBuildPhase() {
-  return process.env.NEXT_PHASE === "phase-production-build";
+  return serverEnv("NEXT_PHASE") === "phase-production-build";
 }
 
 export function pg() {
@@ -15,7 +16,7 @@ export function pg() {
   const url = databaseUrl();
   if (!url) return null;
   // New Supabase projects resolve db.*.supabase.co to IPv6 only. Skip when we cannot use it.
-  if (/db\.[a-z0-9]+\.supabase\.co:5432/i.test(url) && !process.env.DATABASE_FORCE_DIRECT) {
+  if (/db\.[a-z0-9]+\.supabase\.co:5432/i.test(url) && !serverEnv("DATABASE_FORCE_DIRECT")) {
     return null;
   }
   if (!g.__longbidSql) {

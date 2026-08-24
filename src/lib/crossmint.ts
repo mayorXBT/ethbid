@@ -1,7 +1,8 @@
+import { serverEnv } from "./env";
 import type { Bid } from "./types";
 
 export function crossmintApiKey(): string {
-  return process.env.CROSSMINT_API_KEY || "";
+  return serverEnv("CROSSMINT_API_KEY");
 }
 
 export function crossmintEnabled(): boolean {
@@ -131,8 +132,7 @@ export async function ensureDepositAddresses(bid: Bid): Promise<DepositAddresses
   const slug = bid.id.replace(/-/g, "").slice(0, 16).toLowerCase();
   const owner = `userId:longbid-${slug}`;
   const alias = `bid-${slug}`;
-  const email =
-    process.env.CROSSMINT_SIGNER_EMAIL?.trim() || `bid-${slug}@longbid.lol`;
+  const email = serverEnv("CROSSMINT_SIGNER_EMAIL") || `bid-${slug}@longbid.lol`;
   const [evmRes, solRes] = await Promise.all([
     bid.depositEvm
       ? Promise.resolve({ address: bid.depositEvm, error: null as string | null })
@@ -210,14 +210,14 @@ export function paymentCovered(received: number, due: number): boolean {
 
 export function treasuryAddresses() {
   return {
-    evm: process.env.CROSSMINT_TREASURY_EVM?.trim() || "",
-    sol: process.env.CROSSMINT_TREASURY_SOL?.trim() || "",
-    email: process.env.CROSSMINT_SIGNER_EMAIL?.trim() || "",
+    evm: serverEnv("CROSSMINT_TREASURY_EVM"),
+    sol: serverEnv("CROSSMINT_TREASURY_SOL"),
+    email: serverEnv("CROSSMINT_SIGNER_EMAIL"),
   };
 }
 
 function transferSigner(): string | null {
-  const email = process.env.CROSSMINT_SIGNER_EMAIL?.trim();
+  const email = serverEnv("CROSSMINT_SIGNER_EMAIL");
   if (email) return `email:${email}`;
   return "api-key";
 }
@@ -279,7 +279,7 @@ export async function verifyCrossmintSignature(
   payload: string,
   signature: string | null,
 ): Promise<boolean> {
-  const secret = process.env.CROSSMINT_WEBHOOK_SECRET;
+  const secret = serverEnv("CROSSMINT_WEBHOOK_SECRET");
   if (!secret) return true;
   if (!signature) return false;
   const key = await crypto.subtle.importKey(
