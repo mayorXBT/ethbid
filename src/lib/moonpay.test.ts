@@ -18,7 +18,8 @@ afterEach(() => {
 
 describe("MoonPay Commerce", () => {
   it("creates a dynamic charge for the bid amount and carries the bid id", async () => {
-    process.env.MOONPAY_API_KEY = "test-api-key";
+    process.env.MOONPAY_API_KEY = "test-secret-api-key";
+    process.env.MOONPAY_PUBLIC_KEY = "test-public-api-key";
     process.env.MOONPAY_PAYLINK_ID = "6a8d6daea2f840feb6db6c18";
     process.env.MOONPAY_API_BASE_URL = "https://api.dev.hel.io/v1";
     process.env.NEXT_PUBLIC_SITE_URL = "https://longbid.lol";
@@ -39,8 +40,9 @@ describe("MoonPay Commerce", () => {
     expect(result).toEqual({ id: "charge-123", pageUrl: "https://moonpay.dev.hel.io/charge/charge-123" });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe("https://api.dev.hel.io/v1/charge/api-key?apiKey=test-api-key");
+    expect(url).toBe("https://api.dev.hel.io/v1/charge/api-key?apiKey=test-public-api-key");
     expect(init.method).toBe("POST");
+    expect((init.headers as Record<string, string>).Authorization).toBe("Bearer test-secret-api-key");
     const body = JSON.parse(String(init.body));
     expect(body.paymentRequestId).toBe("6a8d6daea2f840feb6db6c18");
     expect(body.requestAmount).toBe("12");

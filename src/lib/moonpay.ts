@@ -53,13 +53,15 @@ export function verifyMoonPaySignature(raw: string, signature: string | null): b
 
 export async function createMoonPayCharge(bid: MoonPayChargeBid): Promise<{ id: string; pageUrl: string }> {
   const apiKey = configured("MOONPAY_API_KEY");
+  const publicKey = configured("MOONPAY_PUBLIC_KEY");
   const paylinkId = configured("MOONPAY_PAYLINK_ID");
   if (!apiKey) throw new Error("MOONPAY_API_KEY is missing.");
+  if (!publicKey) throw new Error("MOONPAY_PUBLIC_KEY is missing.");
   if (!paylinkId) throw new Error("MOONPAY_PAYLINK_ID is missing.");
 
   const siteUrl = configured("NEXT_PUBLIC_SITE_URL") || "http://localhost:3000";
   const apiBase = configured("MOONPAY_API_BASE_URL") || DEFAULT_API_BASE_URL;
-  const endpoint = `${apiBase.replace(/\/$/, "")}/charge/api-key?apiKey=${encodeURIComponent(apiKey)}`;
+  const endpoint = `${apiBase.replace(/\/$/, "")}/charge/api-key?apiKey=${encodeURIComponent(publicKey)}`;
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {
