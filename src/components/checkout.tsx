@@ -58,6 +58,40 @@ export function Checkout({ bid }: { bid: Bid }) {
   const deposits = status.deposits;
   const waiting = !status.settled;
 
+  if (bid.paymentProvider === "moonpay") {
+    return (
+      <div className="space-y-6">
+        <div className="border border-line bg-card p-5">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">MoonPay checkout</p>
+          <p className="mt-2 text-3xl tabular-nums text-bid">{formatUsdc(bid.amountDueUsd)}</p>
+          <p className="mt-2 truncate text-sm text-muted-foreground">{bid.url}</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">Pay the exact USDC amount through MoonPay.</p>
+        </div>
+
+        {bid.paymentUrl ? (
+          <a
+            href={bid.paymentUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex h-11 w-full items-center justify-center bg-bid px-4 text-sm font-medium text-void hover:bg-bid/90"
+          >
+            Open MoonPay checkout
+          </a>
+        ) : (
+          <p className="border border-heat/40 bg-heat/10 px-3 py-2 text-sm text-heat">
+            MoonPay checkout is not available yet. Refresh this page in a moment.
+          </p>
+        )}
+
+        {waiting ? (
+          <p className="text-sm text-muted-foreground">
+            Waiting for MoonPay to confirm the payment. This page checks every 4s.
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="border border-line bg-card p-5">

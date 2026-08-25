@@ -254,6 +254,61 @@ export async function patchBidDeposits(
   });
 }
 
+export async function patchBidPayment(
+  bidId: string,
+  patch: Partial<Pick<Bid, "paymentProvider" | "paymentId" | "paymentUrl">>,
+): Promise<Bid | null> {
+  const sql = pg();
+  if (sql) {
+    await sql`
+      update bids set
+        payment_provider = coalesce(${patch.paymentProvider ?? null}, payment_provider),
+        payment_id = coalesce(${patch.paymentId ?? null}, payment_id),
+        payment_url = coalesce(${patch.paymentUrl ?? null}, payment_url)
+      where id = ${bidId}
+    `;
+    return getBid(bidId);
+  }
+  const sb = supabaseAdmin();
+  if (sb) {
+    const { data, error } = await sb
+      .from("bids")
+      .update({
+        payment_provider: patch.paymentProvider,
+        payment_id: patch.paymentId,
+        payment_url: patch.paymentUrl,
+      })
+      .eq("id", bidId)
+      .select("*")
+      .maybeSingle();
+    if (error) throw error;
+    return data ? bidFromRow(data) : null;
+  }
+  if (!fileWritesAllowed()) throw missingWriteConfigError("save payment details");
+  return mutate((s) => {
+    const bid = s.bids.find((item) => item.id === bidId);
+    if (!bid) return null;
+    Object.assign(bid, patch);
+    return bid;
+  });
+}
+
+export async function getBidByPaymentId(paymentId: string): Promise<Bid | null> {
+  const sql = pg();
+  if (sql) {
+    const rows = await sql`select * from bids where payment_id = ${paymentId} limit 1`;
+    return rows[0] ? bidFromRow(rows[0] as Record<string, unknown>) : null;
+  }
+  const sb = supabaseAdmin() ?? supabase();
+  if (sb) {
+    const { data, error } = await sb.from("bids").select("*").eq("payment_id", paymentId).maybeSingle();
+    if (error) throw error;
+    if (data) return bidFromRow(data);
+  }
+  const store = await loadFile();
+  return store.bids.find((bid) => bid.paymentId === paymentId) ?? null;
+}
+
 export async function getBidByDepositAddress(address: string): Promise<Bid | null> {
   const sql = pg();
   if (sql) {
@@ -664,6 +719,9 @@ function bidFromRow(row: Record<string, unknown>): Bid {
     amountDueUsd: Number(row.amount_due_usd),
     kind: row.kind as Bid["kind"],
     status: row.status as Bid["status"],
+    paymentProvider: row.payment_provider === "moonpay" ? "moonpay" : "crossmint",
+    paymentId: (row.payment_id as string | null) ?? null,
+    paymentUrl: (row.payment_url as string | null) ?? null,
     crossmintOrderId: (row.crossmint_order_id as string | null) ?? null,
     depositEvm: (row.deposit_evm as string | null) ?? null,
     depositSol: (row.deposit_sol as string | null) ?? null,
@@ -683,6 +741,9 @@ function bidToRow(b: Bid) {
     amount_due_usd: b.amountDueUsd,
     kind: b.kind,
     status: b.status,
+    payment_provider: b.paymentProvider ?? "crossmint",
+    payment_id: b.paymentId ?? null,
+    payment_url: b.paymentUrl ?? null,
     crossmint_order_id: b.crossmintOrderId,
     deposit_evm: b.depositEvm,
     deposit_sol: b.depositSol,

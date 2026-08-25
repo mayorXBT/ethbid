@@ -16,6 +16,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
     return NextResponse.json({
       bid: status.bid,
       deposits: status.deposits,
+      paymentProvider: status.bid.paymentProvider ?? "crossmint",
+      paymentUrl: status.bid.paymentUrl ?? null,
       received: status.received,
       settled: status.settled,
       rank: status.activity?.rank ?? null,

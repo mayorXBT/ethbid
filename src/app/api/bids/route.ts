@@ -7,6 +7,7 @@ import { clientIp, readJsonLimited, RequestTooLargeError } from "@/lib/request";
 import { createBidBody } from "@/lib/schemas";
 import { createBid, getListingByCanonical, getListings } from "@/lib/store";
 import { normalizeTarget } from "@/lib/urls";
+import { serverEnv } from "@/lib/env";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -62,6 +63,9 @@ export async function POST(req: Request) {
       amountDueUsd: quote.amountDueUsd,
       kind: quote.kind,
       status: "pending",
+      paymentProvider: serverEnv("PAYMENT_PROVIDER") === "moonpay" ? "moonpay" : "crossmint",
+      paymentId: null,
+      paymentUrl: null,
       crossmintOrderId: null,
       depositEvm: null,
       depositSol: null,

@@ -3,6 +3,7 @@ import type { CategorySlug } from "./categories";
 export type BidKind = "new" | "raise";
 export type BidStatus = "pending" | "paid" | "failed" | "expired";
 export type ActivityKind = "claimed" | "raised";
+export type PaymentProvider = "crossmint" | "moonpay";
 
 export interface Listing {
   id: string;
@@ -36,6 +37,9 @@ export interface Bid {
   amountDueUsd: number;
   kind: BidKind;
   status: BidStatus;
+  paymentProvider?: PaymentProvider;
+  paymentId?: string | null;
+  paymentUrl?: string | null;
   crossmintOrderId: string | null;
   depositEvm: string | null;
   depositSol: string | null;

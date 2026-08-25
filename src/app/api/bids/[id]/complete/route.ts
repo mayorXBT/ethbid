@@ -21,6 +21,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
           received: status.received,
           due: status.bid.amountDueUsd,
           deposits: status.deposits,
+          paymentProvider: status.bid.paymentProvider ?? "crossmint",
+          paymentUrl: status.bid.paymentUrl ?? null,
         },
         { status: 202 },
       );
