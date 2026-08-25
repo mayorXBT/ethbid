@@ -1,4 +1,5 @@
 import { isCategory } from "@/lib/categories";
+import { bidsEnabled } from "@/lib/bids-config";
 import { parseUsd } from "@/lib/money";
 import { limiter, limitResponse } from "@/lib/rate-limit";
 import { quoteBid } from "@/lib/ranking";
@@ -9,6 +10,9 @@ import { normalizeTarget } from "@/lib/urls";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
+  if (!bidsEnabled()) {
+    return NextResponse.json({ error: "Bidding is coming soon." }, { status: 503 });
+  }
   const gate = limiter().hit(`bids:${clientIp(req)}`, { max: 5, windowMs: 15 * 60_000 });
   if (!gate.ok) return limitResponse(gate.retryAfterSec);
 

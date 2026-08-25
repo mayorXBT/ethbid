@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { CATEGORIES } from "@/lib/categories";
+import { bidsEnabled } from "@/lib/bids-config";
 import { MAX_BID_USD, MIN_NEW_BID_USD, parseUsd } from "@/lib/money";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
@@ -18,6 +19,7 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
   const [draft, setDraft] = useState(String(start));
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const biddingOpen = bidsEnabled();
 
   function setBid(n: number) {
     const next = Math.min(MAX_BID_USD, Math.max(min, Math.floor(n)));
@@ -32,6 +34,10 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!biddingOpen) {
+      setError("Bidding is coming soon.");
+      return;
+    }
     setError(null);
     setPending(true);
     const form = new FormData(e.currentTarget);
@@ -156,7 +162,15 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
             +
           </button>
         </div>
-        <Button type="submit" disabled={pending} className="col-span-2 h-12 rounded-full px-8 md:col-span-1">
+        <Button
+          type="submit"
+          disabled={pending || !biddingOpen}
+          aria-label={biddingOpen ? "Place bid" : "Coming soon"}
+          className={`relative col-span-2 h-12 rounded-full px-8 md:col-span-1 ${biddingOpen ? "" : "!text-transparent"}`}
+        >
+          <span aria-hidden="true" className={biddingOpen ? "hidden" : "absolute text-foreground"}>
+            Coming soon
+          </span>
           {pending ? "Opening…" : "Place bid"}
         </Button>
       </div>

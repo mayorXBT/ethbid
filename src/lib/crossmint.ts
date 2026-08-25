@@ -1,3 +1,4 @@
+import { CrossmintWallets, createCrossmint } from "@crossmint/wallets-sdk";
 import { serverEnv } from "./env";
 import type { Bid } from "./types";
 
@@ -7,6 +8,20 @@ export function crossmintApiKey(): string {
 
 export function crossmintEnabled(): boolean {
   return Boolean(crossmintApiKey());
+}
+
+function crossmintSignerSecret(): string {
+  return serverEnv("CROSSMINT_SIGNER_SECRET");
+}
+
+export function serverSignerConfigured(): boolean {
+  return Boolean(crossmintApiKey() && crossmintSignerSecret());
+}
+
+function walletsSdk() {
+  if (!crossmintEnabled()) throw new Error("CROSSMINT_API_KEY is missing.");
+  if (!crossmintSignerSecret()) throw new Error("CROSSMINT_SIGNER_SECRET is missing.");
+  return CrossmintWallets.from(createCrossmint({ apiKey: crossmintApiKey() }));
 }
 
 function apiHost(): string {
@@ -48,73 +63,31 @@ export interface DepositAddresses {
   error: string | null;
 }
 
-function addressOf(data: unknown): string | null {
-  if (!data || typeof data !== "object") return null;
-  const rec = data as { address?: string };
-  return rec.address || null;
-}
-
 async function createWallet(opts: {
   chainType: "evm" | "solana";
   owner: string;
   alias: string;
-  email: string;
 }): Promise<{ address: string | null; error: string | null }> {
-  const payloads: unknown[] = [
-    {
-      chainType: opts.chainType,
-      owner: opts.owner,
-      alias: opts.alias,
-      config: { adminSigner: { type: "email", email: opts.email } },
-    },
-    {
-      chainType: opts.chainType,
-      type: "smart",
-      owner: opts.owner,
-      alias: opts.alias,
-      config: { adminSigner: { type: "email", email: opts.email } },
-    },
-    {
-      chainType: opts.chainType,
-      type: "smart",
-      owner: opts.owner,
-      alias: opts.alias,
-      config: { adminSigner: { type: "api-key" } },
-    },
-    {
-      chainType: opts.chainType,
-      type: "mpc",
-      owner: opts.owner,
-      alias: opts.alias,
-    },
-  ];
-
-  const errors: string[] = [];
-  for (const body of payloads) {
-    try {
-      const data = await cmFetch("/api/2025-06-09/wallets", {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
-      const address = addressOf(data);
-      if (address) return { address, error: null };
-    } catch (error) {
-      errors.push(error instanceof Error ? error.message : "Wallet create failed.");
-    }
-  }
-
   try {
-    const existing = await cmFetch(
-      `/api/2025-06-09/wallets/${encodeURIComponent(`${opts.owner}:${opts.chainType}`)}`,
-    );
-    const address = addressOf(existing);
-    if (address) return { address, error: null };
+    const wallets = walletsSdk();
+    const secret = crossmintSignerSecret();
+    const wallet = opts.chainType === "evm"
+      ? await wallets.createWallet({
+          chain: "base",
+          owner: opts.owner,
+          alias: opts.alias,
+          recovery: { type: "server", secret },
+        })
+      : await wallets.createWallet({
+          chain: "solana",
+          owner: opts.owner,
+          alias: opts.alias,
+          recovery: { type: "server", secret },
+        });
+    return { address: wallet.address, error: null };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-    if (message && !/not found/i.test(message)) errors.push(message);
+    return { address: null, error: error instanceof Error ? error.message : "Wallet create failed." };
   }
-
-  return { address: null, error: errors[0] ?? "Wallet create failed." };
 }
 
 export async function ensureDepositAddresses(bid: Bid): Promise<DepositAddresses> {
@@ -128,18 +101,24 @@ export async function ensureDepositAddresses(bid: Bid): Promise<DepositAddresses
       error: "CROSSMINT_API_KEY is missing on the server. Put the secret key in .env.local, not NEXT_PUBLIC_.",
     };
   }
+  if (!serverSignerConfigured()) {
+    return {
+      evm: null,
+      sol: null,
+      error: "CROSSMINT_SIGNER_SECRET is missing. Configure the Crossmint server signer before accepting bids.",
+    };
+  }
 
   const slug = bid.id.replace(/-/g, "").slice(0, 16).toLowerCase();
   const owner = `userId:longbid-${slug}`;
   const alias = `bid-${slug}`;
-  const email = serverEnv("CROSSMINT_SIGNER_EMAIL") || `bid-${slug}@longbid.lol`;
   const [evmRes, solRes] = await Promise.all([
     bid.depositEvm
       ? Promise.resolve({ address: bid.depositEvm, error: null as string | null })
-      : createWallet({ chainType: "evm", owner, alias, email }),
+      : createWallet({ chainType: "evm", owner, alias }),
     bid.depositSol
       ? Promise.resolve({ address: bid.depositSol, error: null as string | null })
-      : createWallet({ chainType: "solana", owner, alias, email }),
+      : createWallet({ chainType: "solana", owner, alias }),
   ]);
 
   const evm = evmRes.address;
@@ -216,29 +195,20 @@ export function treasuryAddresses() {
   };
 }
 
-function transferSigner(): string | null {
-  const email = serverEnv("CROSSMINT_SIGNER_EMAIL");
-  if (email) return `email:${email}`;
-  return "api-key";
-}
-
 async function transferUsdc(opts: {
   from: string;
   to: string;
   amount: number;
   token: string;
 }): Promise<{ ok: boolean; error?: string }> {
-  const signer = transferSigner();
-  const body: Record<string, unknown> = {
-    amount: String(opts.amount),
-    recipient: opts.to,
-  };
-  if (signer) body.signer = signer;
   try {
-    await cmFetch(
-      `/api/2025-06-09/wallets/${encodeURIComponent(opts.from)}/tokens/${encodeURIComponent(opts.token)}/transfers`,
-      { method: "POST", body: JSON.stringify(body) },
-    );
+    const wallets = walletsSdk();
+    const wallet = opts.token === "base:usdc"
+      ? await wallets.getWallet(opts.from, { chain: "base" })
+      : await wallets.getWallet(opts.from, { chain: "solana" });
+    await wallet.useSigner({ type: "server", secret: crossmintSignerSecret() });
+    const tx = await wallet.send(opts.to, "usdc", String(opts.amount));
+    if (!tx.hash && !tx.transactionId) return { ok: false, error: "Crossmint returned no transaction." };
     return { ok: true };
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : "sweep failed" };
