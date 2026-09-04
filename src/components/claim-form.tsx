@@ -5,9 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { CATEGORIES } from "@/lib/categories";
 import { bidsEnabled } from "@/lib/bids-config";
+import { VerifyOwnership, type VerifyMethod } from "@/components/verify-ownership";
+import { ethbidConfigured, ethbidContracts } from "@/lib/ethbid/config";
+import { plainEthbidError } from "@/lib/ethbid/errors";
+import { submitEthbidBid } from "@/lib/ethbid/submit";
 import { MAX_BID_USD, MIN_NEW_BID_USD, parseUsd } from "@/lib/money";
+import { normalizeTarget } from "@/lib/urls";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 
 export function ClaimForm({ defaultBid }: { defaultBid: number }) {
   const router = useRouter();
@@ -18,8 +24,17 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
   const [amount, setAmount] = useState(start);
   const [draft, setDraft] = useState(String(start));
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const biddingOpen = bidsEnabled();
+  const [method, setMethod] = useState<VerifyMethod>("ens");
+  const [ens, setEns] = useState("");
+  const [domain, setDomain] = useState("");
+  const [domainVerified, setDomainVerified] = useState(false);
+  const onchain = ethbidConfigured();
+  const biddingOpen = onchain || bidsEnabled();
+  const { address, isConnected } = useAccount();
+  const publicClient = usePublicClient();
+  const { data: walletClient } = useWalletClient();
 
   function setBid(n: number) {
     const next = Math.min(MAX_BID_USD, Math.max(min, Math.floor(n)));
@@ -39,12 +54,47 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
       return;
     }
     setError(null);
+    setStatus(null);
     setPending(true);
     const form = new FormData(e.currentTarget);
     const parsed = parseUsd(draft);
     const bidUsd = Math.min(MAX_BID_USD, Math.max(min, parsed ?? amount));
     setBid(bidUsd);
     try {
+      if (onchain) {
+        const contracts = ethbidContracts();
+        const target = normalizeTarget(String(form.get("target") ?? ""));
+        if (!contracts) throw new Error("ETHBid contracts are not deployed yet.");
+        if (!target) throw new Error("Need a real URL or @handle.");
+        if (!isConnected || !address) throw new Error("Connect a wallet first.");
+        if (!publicClient || !walletClient) throw new Error("Wallet client is not ready.");
+        const { hash } = await submitEthbidBid(
+          contracts,
+          address,
+          publicClient,
+          walletClient,
+          {
+            canonicalKey: target.canonicalKey,
+            url: target.url,
+            ensName: method === "ens" ? ens : "",
+            domain: method === "domain" ? domain : undefined,
+            domainVerified: method === "domain" ? domainVerified : false,
+            targetUsdc: bidUsd,
+          },
+          (step) => {
+            const copy: Record<string, string> = {
+              ens: "Checking ENS ownership…",
+              register: "Registering the product…",
+              verify: "Writing verification onchain…",
+              swap: "Swapping to USDC…",
+              confirmed: "Confirmed.",
+            };
+            setStatus(copy[step] ?? step);
+          },
+        );
+        setStatus(`Confirmed. ${hash.slice(0, 10)}…`);
+        return;
+      }
       const res = await fetch("/api/bids", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -71,8 +121,8 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
         return;
       }
       router.push(`/pay/${data.bid.id}`);
-    } catch {
-      setError("Network error. Try again.");
+    } catch (err) {
+      setError(plainEthbidError(err));
     } finally {
       setPending(false);
     }
@@ -81,13 +131,13 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
   return (
     <form onSubmit={onSubmit} className="grid gap-6">
       <div>
-        <p className="text-[11px] uppercase tracking-[0.22em] text-bid">Crypto products only</p>
+        <p className="text-[11px] uppercase tracking-[0.22em] text-bid">Onchain discovery</p>
         <h1 className="mt-2 text-[2rem] font-semibold tracking-tight text-foreground sm:text-5xl">
           Rank is the bid.
         </h1>
         <p className="mt-3 max-w-lg text-sm text-muted-foreground">
-          Pay more. Rank higher. Floor ${min} USDC. Paying under #1 still puts you on the book
-          at whatever rank that size can take.
+          Connect a wallet. Verify ENS or a domain. Bid through Uniswap into canonical USDC.
+          Rank is public on The Graph. Floor ${min} USDC.
         </p>
       </div>
 
@@ -171,14 +221,30 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
           <span aria-hidden="true" className={biddingOpen ? "hidden" : "absolute text-foreground"}>
             Coming soon
           </span>
-          {pending ? "Opening…" : "Place bid"}
+          {pending ? (onchain ? "Submitting…" : "Opening…") : "Place bid"}
         </Button>
       </div>
+      {onchain ? (
+        <VerifyOwnership
+          method={method}
+          onMethod={setMethod}
+          ens={ens}
+          onEns={setEns}
+          domain={domain}
+          onDomain={setDomain}
+          domainVerified={domainVerified}
+          onDomainVerified={setDomainVerified}
+        />
+      ) : null}
       {error ? (
         <p className="text-xs text-heat">{error}</p>
+      ) : status ? (
+        <p className="text-xs text-bid">{status}</p>
       ) : (
         <p className="text-[11px] text-muted-foreground">
-          Already listed? Same URL or @handle. You only pay the difference.
+          {onchain
+            ? "Connect a wallet. Bid in ETH. Uniswap converts to USDC onchain."
+            : "Already listed? Same URL or @handle. You only pay the difference."}
         </p>
       )}
     </form>

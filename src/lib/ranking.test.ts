@@ -20,6 +20,14 @@ function listing(partial: Partial<Listing> & Pick<Listing, "id" | "bidUsd" | "cr
 }
 
 describe("rankListings", () => {
+  it("breaks remaining ties by stable project id", () => {
+    const ranked = rankListings([
+      listing({ id: "b", bidUsd: 10, createdAt: "2026-08-20T00:00:00.000Z" }),
+      listing({ id: "a", bidUsd: 10, createdAt: "2026-08-20T00:00:00.000Z" }),
+    ]);
+    expect(ranked.map((r) => r.id)).toEqual(["a", "b"]);
+  });
+
   it("orders by bid desc, older wins ties", () => {
     const ranked = rankListings([
       listing({ id: "a", bidUsd: 10, createdAt: "2026-08-20T00:00:00.000Z" }),

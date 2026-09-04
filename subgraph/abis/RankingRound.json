@@ -1,0 +1,53 @@
+[
+  {
+    "type": "event",
+    "name": "RoundStarted",
+    "inputs": [
+      { "name": "roundId", "type": "uint256", "indexed": true },
+      { "name": "start", "type": "uint64", "indexed": false },
+      { "name": "end", "type": "uint64", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "BidPlaced",
+    "inputs": [
+      { "name": "roundId", "type": "uint256", "indexed": true },
+      { "name": "projectId", "type": "bytes32", "indexed": true },
+      { "name": "owner", "type": "address", "indexed": true },
+      { "name": "amount", "type": "uint256", "indexed": false },
+      { "name": "total", "type": "uint256", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "BidIncreased",
+    "inputs": [
+      { "name": "roundId", "type": "uint256", "indexed": true },
+      { "name": "projectId", "type": "bytes32", "indexed": true },
+      { "name": "owner", "type": "address", "indexed": true },
+      { "name": "amount", "type": "uint256", "indexed": false },
+      { "name": "total", "type": "uint256", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "BidWithdrawn",
+    "inputs": [
+      { "name": "roundId", "type": "uint256", "indexed": true },
+      { "name": "projectId", "type": "bytes32", "indexed": true },
+      { "name": "owner", "type": "address", "indexed": true },
+      { "name": "amount", "type": "uint256", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RoundFinalized",
+    "inputs": [{ "name": "roundId", "type": "uint256", "indexed": true }],
+    "anonymous": false
+  }
+]

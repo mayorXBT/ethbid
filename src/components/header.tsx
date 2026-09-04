@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { MobileNav } from "@/components/mobile-nav";
+import { WalletButton } from "@/components/wallet-button";
 import { getStats } from "@/lib/store";
 
 export async function Header() {
@@ -19,8 +20,7 @@ export async function Header() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-bid.png" alt="" width={32} height={32} className="h-7 w-7 shrink-0 sm:h-8 sm:w-8" />
           <span className="truncate text-sm font-semibold tracking-tight text-foreground sm:text-base">
-            Longbid
-            <span className="hidden text-muted-foreground sm:inline">.lol</span>
+            ETHBid
           </span>
         </Link>
 
@@ -56,6 +56,10 @@ export async function Header() {
             <Link href="/about" className="hover:text-bid">
               About
             </Link>
+            <Link href="/verify" className="hover:text-bid">
+              Verify
+            </Link>
+            <WalletButton />
             <ThemeToggle />
           </nav>
           <MobileNav />

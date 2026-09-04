@@ -1,0 +1,44 @@
+[
+  {
+    "type": "event",
+    "name": "ProjectRegistered",
+    "inputs": [
+      { "name": "id", "type": "bytes32", "indexed": true },
+      { "name": "owner", "type": "address", "indexed": true },
+      { "name": "verification", "type": "uint8", "indexed": false },
+      { "name": "identityRef", "type": "bytes32", "indexed": false },
+      { "name": "metadataURI", "type": "string", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ProjectUpdated",
+    "inputs": [
+      { "name": "id", "type": "bytes32", "indexed": true },
+      { "name": "metadataURI", "type": "string", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ProjectVerified",
+    "inputs": [
+      { "name": "id", "type": "bytes32", "indexed": true },
+      { "name": "verification", "type": "uint8", "indexed": false },
+      { "name": "identityRef", "type": "bytes32", "indexed": false },
+      { "name": "owner", "type": "address", "indexed": true }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ProjectOwnerTransferred",
+    "inputs": [
+      { "name": "id", "type": "bytes32", "indexed": true },
+      { "name": "from", "type": "address", "indexed": true },
+      { "name": "to", "type": "address", "indexed": true }
+    ],
+    "anonymous": false
+  }
+]

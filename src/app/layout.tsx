@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import { Presence } from "@/components/presence";
+import { Web3Provider } from "@/components/web3-provider";
 import "./globals.css";
 
 const jetbrains = JetBrains_Mono({
@@ -12,25 +13,25 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://longbid.lol"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://ethbid.longbid.lol"),
   title: {
-    default: "Longbid — Rank is the bid.",
-    template: "%s · Longbid",
+    default: "ETHBid. Rank is the onchain bid.",
+    template: "%s · ETHBid",
   },
   description:
-    "Public pay-to-rank leaderboard for crypto products. Higher USDC bid. Higher rank. Nothing else.",
+    "Onchain discovery market for crypto products. Verify ownership. Bid through Uniswap into canonical USDC. Rank anyone can reconstruct from The Graph.",
   openGraph: {
-    title: "Longbid — Rank is the bid.",
-    description: "Pay more. Rank higher. The only crypto leaderboard that does not lie.",
+    title: "ETHBid. Rank is the onchain bid.",
+    description: "Verify. Bid. Rank. Reconstruct it from contracts and The Graph.",
     type: "website",
-    siteName: "Longbid",
+    siteName: "ETHBid",
     url: "/",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Longbid — Rank is the bid." }],
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "ETHBid. Rank is the onchain bid." }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Longbid — Rank is the bid.",
-    description: "Pay more. Rank higher. The only crypto leaderboard that does not lie.",
+    title: "ETHBid. Rank is the onchain bid.",
+    description: "Verify. Bid. Rank. Reconstruct it from contracts and The Graph.",
     images: ["/og.png"],
   },
   icons: {
@@ -51,7 +52,7 @@ export default function RootLayout({
           {`try{var t=localStorage.getItem('lb_theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch(e){}`}
         </Script>
         <Presence />
-        {children}
+        <Web3Provider>{children}</Web3Provider>
       </body>
     </html>
   );

@@ -22,14 +22,14 @@ export default function OgCardPage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo-bid.png" alt="" width={72} height={72} className="h-[72px] w-[72px]" />
               <p className="text-[28px] font-semibold tracking-tight">
-                Longbid<span className="text-[#8b93a1]">.lol</span>
+                ETHBid
               </p>
             </div>
             <div className="flex items-center gap-3 rounded-full border border-[#1c2129] bg-[#0e1014] px-4 py-2 text-[16px]">
               <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#3dff9a]" />
               <span className="font-medium text-[#3dff9a]">Live</span>
               <span className="h-4 w-px bg-[#1c2129]" />
-              <span className="text-[#8b93a1]">USDC on Base + Solana</span>
+              <span className="text-[#8b93a1]">Uniswap + The Graph</span>
             </div>
           </div>
 

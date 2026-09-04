@@ -44,7 +44,7 @@ export function BoardTable({ listings }: { listings: RankedListing[] }) {
   if (listings.length === 0) {
     return (
       <div className="border border-dashed border-line px-6 py-16 text-center text-sm text-muted-foreground">
-        Board is empty. First $5 USDC listing takes #1.
+        Board is empty. First canonical USDC bid this round takes #1.
       </div>
     );
   }
@@ -115,13 +115,22 @@ export function BoardTable({ listings }: { listings: RankedListing[] }) {
                       </p>
                     ) : null}
                     <p className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
-                      <span className="text-cyan">{categoryLabel(listing.category)}</span>
+                      <span className="text-cyan">
+                        {listing.verification === "Ens"
+                          ? "ENS verified"
+                          : listing.verification === "Domain"
+                            ? "Domain verified"
+                            : categoryLabel(listing.category)}
+                      </span>
                       <span className="text-mute/50">·</span>
                       <span className="text-mute">{listedAt(listing.updatedAt)}</span>
                       <span className="text-mute/50">·</span>
                       <span className="text-heat">{listing.clickCount.toLocaleString()} clicks</span>
                       <span className="text-mute/50">·</span>
-                      <Link href={`/go/${listing.id}`} className="text-bid underline-offset-2 hover:underline">
+                      <Link
+                        href={listing.id.startsWith("0x") ? listing.url : `/go/${listing.id}`}
+                        className="text-bid underline-offset-2 hover:underline"
+                      >
                         see details
                       </Link>
                     </p>

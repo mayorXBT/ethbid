@@ -1,6 +1,7 @@
 "use client";
 
 import { ThemeToggle } from "@/components/theme-toggle";
+import { WalletButton } from "@/components/wallet-button";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -9,6 +10,7 @@ const LINKS = [
   { href: "/", label: "Board" },
   { href: "/rules", label: "Rules" },
   { href: "/about", label: "About" },
+  { href: "/verify", label: "Verify" },
 ];
 
 export function MobileNav() {
@@ -72,7 +74,11 @@ export function MobileNav() {
                   {link.label}
                 </Link>
               ))}
-              <div className="mt-6 flex items-center justify-between">
+              <div className="mt-6 flex items-center justify-between gap-3">
+                <span className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Wallet</span>
+                <WalletButton />
+              </div>
+              <div className="mt-4 flex items-center justify-between">
                 <span className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Theme</span>
                 <ThemeToggle />
               </div>

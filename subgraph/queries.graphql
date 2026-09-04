@@ -1,0 +1,93 @@
+# Current leaderboard for an active round
+query CurrentLeaderboard($roundId: Bytes!) {
+  bids(
+    where: { round: $roundId }
+    orderBy: canonicalUsdc
+    orderDirection: desc
+    first: 100
+  ) {
+    id
+    canonicalUsdc
+    createdAt
+    txHash
+    project {
+      id
+      owner
+      verification
+      identityRef
+      metadataURI
+    }
+  }
+}
+
+query Product($id: Bytes!) {
+  project(id: $id) {
+    id
+    owner
+    verification
+    identityRef
+    metadataURI
+    bids(orderBy: createdAt, orderDirection: desc) {
+      id
+      canonicalUsdc
+      createdAt
+      txHash
+      round { id }
+    }
+  }
+}
+
+query ProductBidHistory($projectId: Bytes!) {
+  bidEvents(
+    where: { project: $projectId }
+    orderBy: timestamp
+    orderDirection: desc
+  ) {
+    id
+    kind
+    canonicalUsdc
+    timestamp
+    txHash
+    owner
+  }
+}
+
+query ActiveRound {
+  rounds(where: { finalized: false }, first: 1, orderBy: startedAt, orderDirection: desc) {
+    id
+    startedAt
+    endsAt
+    finalized
+  }
+}
+
+query PreviousRounds {
+  rounds(where: { finalized: true }, orderBy: endsAt, orderDirection: desc, first: 20) {
+    id
+    startedAt
+    endsAt
+    finalized
+  }
+}
+
+query VerifiedOwner($id: Bytes!) {
+  project(id: $id) {
+    id
+    owner
+    verification
+    identityRef
+  }
+}
+
+query RecentBidActivity {
+  bidEvents(first: 20, orderBy: timestamp, orderDirection: desc) {
+    id
+    kind
+    canonicalUsdc
+    timestamp
+    txHash
+    owner
+    project { id }
+    round { id }
+  }
+}

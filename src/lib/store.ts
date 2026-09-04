@@ -2,6 +2,8 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { serverEnv } from "./env";
+import { getGraphBoard } from "./graph/board";
+import { graphConfigured } from "./graph/client";
 import { pg } from "./pg";
 import { rankListings, topBidUsd } from "./ranking";
 import { describeSupabaseWriteKey, isPrivilegedSupabaseKey } from "./supabase-key";
@@ -646,6 +648,9 @@ export async function getActivity(limit = 20): Promise<ActivityItem[]> {
 }
 
 export async function getBoard(): Promise<BoardSnapshot> {
+  if (graphConfigured()) {
+    return getGraphBoard();
+  }
   const listings = await getListings();
   const ranked = rankListings(listings);
   const activity = await getActivity();

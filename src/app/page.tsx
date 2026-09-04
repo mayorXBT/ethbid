@@ -35,7 +35,7 @@ export default async function HomePage() {
 
         <section className="pt-8">
           <p className="mb-4 text-right text-[11px] text-muted-foreground">
-            {board.listings.length} names · {formatUsd(board.stats.volumeUsd)} USDC locked
+            {board.listings.length} products · {formatUsd(board.stats.volumeUsd)} USDC this round
           </p>
           <BoardTable listings={board.listings} />
           <ActivityFeed items={board.activity} />

@@ -51,6 +51,8 @@ scripts/.api-keys.err
 # local leaderboard store
 .data/
 .tmp-qa/
+.tmp-verify/
+.cursor/skills/verify-longbid/artifacts/
 
 # vercel
 .vercel
@@ -58,3 +60,23 @@ scripts/.api-keys.err
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.gstack/
+
+# foundry
+contracts/out/
+contracts/cache/
+contracts/.env
+contracts/broadcast/
+
+# subgraph codegen
+subgraph/generated/
+subgraph/build/
+subgraph/node_modules/
+
+.vercel
+.env*
+!.env.example
+
+# folder-copy leftovers from local duplication
+*Copy*
+* Copy*

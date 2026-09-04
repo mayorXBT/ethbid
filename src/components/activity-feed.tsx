@@ -13,9 +13,9 @@ function timeAgo(iso: string): string {
 export function ActivityFeed({ items }: { items: ActivityItem[] }) {
   return (
     <section className="mt-10">
-      <h2 className="mb-3 text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Latest fills</h2>
+      <h2 className="mb-3 text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Latest bids</h2>
       {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No fills yet.</p>
+        <p className="text-sm text-muted-foreground">No bids this round yet.</p>
       ) : (
         <ul className="space-y-2">
           {items.map((item) => (

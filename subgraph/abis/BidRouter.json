@@ -1,0 +1,14 @@
+[
+  {
+    "type": "event",
+    "name": "BidRouted",
+    "inputs": [
+      { "name": "projectId", "type": "bytes32", "indexed": true },
+      { "name": "bidder", "type": "address", "indexed": true },
+      { "name": "tokenIn", "type": "address", "indexed": false },
+      { "name": "amountIn", "type": "uint256", "indexed": false },
+      { "name": "usdcOut", "type": "uint256", "indexed": false }
+    ],
+    "anonymous": false
+  }
+]

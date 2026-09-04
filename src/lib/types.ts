@@ -4,6 +4,7 @@ export type BidKind = "new" | "raise";
 export type BidStatus = "pending" | "paid" | "failed" | "expired";
 export type ActivityKind = "claimed" | "raised";
 export type PaymentProvider = "crossmint" | "moonpay";
+export type VerificationKind = "None" | "Ens" | "Domain";
 
 export interface Listing {
   id: string;
@@ -15,6 +16,7 @@ export interface Listing {
   faviconUrl: string | null;
   ogImageUrl: string | null;
   category: CategorySlug;
+  verification?: VerificationKind;
   bidUsd: number;
   clickCount: number;
   createdAt: string;

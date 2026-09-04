@@ -1,0 +1,39 @@
+type Project @entity(immutable: false) {
+  id: Bytes!
+  owner: Bytes!
+  verification: String!
+  identityRef: Bytes!
+  metadataURI: String!
+  createdAt: BigInt!
+  updatedAt: BigInt!
+  bids: [Bid!]! @derivedFrom(field: "project")
+}
+
+type Round @entity(immutable: false) {
+  id: Bytes!
+  startedAt: BigInt!
+  endsAt: BigInt!
+  finalized: Boolean!
+  bids: [Bid!]! @derivedFrom(field: "round")
+}
+
+type Bid @entity(immutable: false) {
+  id: Bytes!
+  project: Project!
+  round: Round!
+  owner: Bytes!
+  canonicalUsdc: BigInt!
+  createdAt: BigInt!
+  txHash: Bytes!
+}
+
+type BidEvent @entity(immutable: true) {
+  id: Bytes!
+  kind: String!
+  project: Project!
+  round: Round!
+  owner: Bytes!
+  canonicalUsdc: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+}

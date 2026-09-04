@@ -1,0 +1,65 @@
+specVersion: 1.0.0
+schema:
+  file: ./schema.graphql
+description: >
+  ETHBid ranking subgraph. Indexes ProjectRegistry and RankingRound on
+  Ethereum mainnet from the 2026-08-30 deploy. Round ids are 32-byte padded
+  so they match src/lib/graph/queries.ts.
+dataSources:
+  - kind: ethereum
+    name: ProjectRegistry
+    network: mainnet
+    source:
+      address: "0x3cC438F47c330AB747cf5404c573156221beD2fD"
+      abi: ProjectRegistry
+      startBlock: 25868679
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/project-registry.ts
+      entities:
+        - Project
+      abis:
+        - name: ProjectRegistry
+          file: ./abis/ProjectRegistry.json
+      eventHandlers:
+        - event: ProjectRegistered(indexed bytes32,indexed address,uint8,bytes32,string)
+          handler: handleProjectRegistered
+        - event: ProjectUpdated(indexed bytes32,string)
+          handler: handleProjectUpdated
+        - event: ProjectVerified(indexed bytes32,uint8,bytes32,indexed address)
+          handler: handleProjectVerified
+        - event: ProjectOwnerTransferred(indexed bytes32,indexed address,indexed address)
+          handler: handleProjectOwnerTransferred
+  - kind: ethereum
+    name: RankingRound
+    network: mainnet
+    source:
+      address: "0xd010E8bdbd492124aF10D2ac3f025beaC2E9D44C"
+      abi: RankingRound
+      startBlock: 25868680
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/ranking-round.ts
+      entities:
+        - Round
+        - Bid
+        - BidEvent
+        - Project
+      abis:
+        - name: RankingRound
+          file: ./abis/RankingRound.json
+      eventHandlers:
+        - event: RoundStarted(indexed uint256,uint64,uint64)
+          handler: handleRoundStarted
+        - event: BidPlaced(indexed uint256,indexed bytes32,indexed address,uint256,uint256)
+          handler: handleBidPlaced
+        - event: BidIncreased(indexed uint256,indexed bytes32,indexed address,uint256,uint256)
+          handler: handleBidIncreased
+        - event: BidWithdrawn(indexed uint256,indexed bytes32,indexed address,uint256)
+          handler: handleBidWithdrawn
+        - event: RoundFinalized(indexed uint256)
+          handler: handleRoundFinalized

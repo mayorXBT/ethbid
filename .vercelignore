@@ -1,0 +1,15 @@
+node_modules
+.git
+.next
+.env
+.env.local
+.env*.local
+contracts/lib
+contracts/out
+contracts/cache
+contracts/broadcast
+.data
+.tmp-qa
+.tmp-verify
+*- Copy*
+*Copy*

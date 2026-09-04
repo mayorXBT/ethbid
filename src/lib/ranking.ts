@@ -4,7 +4,9 @@ import type { Listing, RankedListing } from "./types";
 export function rankListings(listings: Listing[]): RankedListing[] {
   const sorted = [...listings].sort((a, b) => {
     if (b.bidUsd !== a.bidUsd) return b.bidUsd - a.bidUsd;
-    return a.createdAt.localeCompare(b.createdAt);
+    const time = a.createdAt.localeCompare(b.createdAt);
+    if (time !== 0) return time;
+    return a.id.localeCompare(b.id);
   });
 
   const volume = sorted.reduce((sum, l) => sum + l.bidUsd, 0);
