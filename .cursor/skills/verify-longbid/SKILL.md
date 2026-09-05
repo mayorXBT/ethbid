@@ -24,8 +24,8 @@ Ready when stdout is JSON with `"ok": true` and `url` is `http://127.0.0.1:3456`
 What launch does:
 
 - Binds **only** port `3456`. Refuses if that port is taken or a previous verify pid is still alive.
-- Blanks `DATABASE_URL`, every `SUPABASE_*` / `NEXT_PUBLIC_SUPABASE_*` key, Crossmint keys, MoonPay keys, and `PAYMENT_PROVIDER` so this process cannot touch hosted Postgres or payment APIs. `.env.local` is ignored for those names because they are already set empty in the child env.
-- Sets `NEXT_PUBLIC_BIDS_ENABLED=true` and `NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3456`.
+- Blanks `DATABASE_URL` and every `SUPABASE_*` / `NEXT_PUBLIC_SUPABASE_*` key so this process cannot touch hosted Postgres. Also blanks Graph env so rank uses the seeded file store.
+- Sets `NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3456`.
 - Snapshots `.data/store.json` to `.tmp-verify/store.snapshot.json`, then seeds an empty file store. The app then uses `.data/store.json` (see `src/lib/store.ts`).
 - Writes `.tmp-verify/state.json` (`pid`, `url`, `port`) and logs to `.tmp-verify/next.log`.
 
@@ -67,7 +67,6 @@ HTTP (same isolated origin):
 
 ```bash
 node .cursor/skills/verify-longbid/scripts/http.mjs GET /api/listings
-node .cursor/skills/verify-longbid/scripts/http.mjs POST /api/bids "{\"target\":\"https://example.xyz\",\"category\":\"defi\",\"amount\":5}"
 ```
 
 Stable handles from this repo (prefer these over coordinates):
@@ -85,9 +84,7 @@ Stable handles from this repo (prefer these over coordinates):
 | Bid amount | `aria-label="Bid amount in USDC"` |
 | Decrease / increase bid | `aria-label="Decrease bid"` / `Increase bid` |
 | Submit | `aria-label="Place bid"` when bidding is open |
-| Empty board | exact text `Board is empty. First $5 USDC listing takes #1.` |
-| Checkout heading | `h1` `Checkout` on `/pay/<uuid>` |
-| Paid flash | `/?paid=1` text `Bid confirmed. Rank is the onchain bid. You are on the board.` |
+| Empty board | exact text `Board is empty. First canonical USDC bid this round takes #1.` |
 
 Category slugs that the form accepts: `l1s-l2s`, `defi`, `wallets`, `ai-crypto`, `infra`, `stablecoins`, `nfts-gaming`, `analytics`, `exchanges`, `social`.
 
@@ -101,11 +98,10 @@ Put proof under `.cursor/skills/verify-longbid/artifacts/<feature>/`. Cleanup do
 
 Minimum for a pass:
 
-- Exercise the real UI or the same fetch the UI uses (`POST /api/bids` from the claim form, not a test-only route). There is no test-only settle endpoint that is safe on a live payment stack; isolated launch blanks payment keys on purpose.
-- Capture the action and the resulting state: before screenshot or ARIA snapshot, the action (`$B click` / fill / HTTP POST), after screenshot or snapshot, plus the JSON or file-store side effect.
-- Side effects: `GET /api/listings` and, after creating a bid, `GET /api/bids/<id>` plus `.data/store.json` (`bids[]` grows; `listings[]` stays empty until a bid is marked paid). Isolated pay pages will not create Crossmint wallets; the checkout error `CROSSMINT_API_KEY is missing on the server` is the expected isolated end state, not a product bug.
-- Screenshots must show the Longbid wordmark or the `Rank is the bid.` heading.
-- Do not call MoonPay or Crossmint. Do not `POST /api/bids/<id>/complete` against a non-isolated instance. Do not use the user's `.env.local` keys.
+- Exercise the real UI. Isolated submit without a wallet must show `Connect a wallet first.` Do not expect `/pay` or `/api/bids`.
+- Capture the action and the resulting state: before screenshot or ARIA snapshot, the action (`$B click` / fill), after screenshot or snapshot.
+- Side effects: `GET /api/listings` stays empty unless a real onchain bid landed.
+- Screenshots must show the ETHBid wordmark or the `Rank is the bid.` heading.
 
 Record the feature id and entry point on the artifacts (filename is enough: `artifacts/board/home.png`).
 

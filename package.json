@@ -16,7 +16,6 @@
     "db:reset": "npx supabase db reset"
   },
   "dependencies": {
-    "@crossmint/wallets-sdk": "^1.12.1",
     "@supabase/supabase-js": "^2.112.3",
     "@tanstack/react-query": "^5.102.8",
     "class-variance-authority": "^0.7.1",
@@ -28,8 +27,7 @@
     "react-dom": "19.1.0",
     "tailwind-merge": "^3.6.0",
     "viem": "^2.36.0",
-    "wagmi": "^2.19.5",
-    "zod": "^3.25.76"
+    "wagmi": "^2.19.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

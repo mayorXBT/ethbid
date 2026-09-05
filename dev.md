@@ -16,7 +16,7 @@ Do not treat Crossmint or MoonPay as ETHBid work. Those are Longbid checkout.
 
 Ethereum mainnet. Chain id `1`. Deployed 2026-08-30.
 
-Admin and treasury are the same wallet: `0x0F7F971D864360bE5DaA0C23D16A8E25eBe23179`.
+Admin and treasury are the same wallet: `0x0F7F971D864360bE5DaA0C23D16A8E25eBe23179`. Live `RankingRound.treasury()` and `admin()` both return that address. `router()` is BidRouter. USDC sits in RankingRound until a round is finalized, then `sweepToTreasury`.
 
 ## Contract addresses
 
