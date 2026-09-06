@@ -27,6 +27,16 @@ export interface NormalizedTarget {
   host: string;
 }
 
+export type TargetIdentity =
+  | { kind: "empty" }
+  | { kind: "handle" }
+  | { kind: "ens"; name: string }
+  | { kind: "domain"; host: string }
+  | { kind: "url" };
+
+const BARE_HOST = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/i;
+const ENS_NAME = /^(?:[a-z0-9-]+\.)+eth$/i;
+
 function stripWww(host: string): string {
   return host.replace(/^www\./i, "");
 }
@@ -40,6 +50,25 @@ function parseHandle(raw: string): string | null {
   const at = trimmed.match(/^@([A-Za-z0-9_]{1,15})$/);
   if (at) return at[1].toLowerCase();
   return null;
+}
+
+export function classifyTarget(input: string): TargetIdentity {
+  const raw = input.trim();
+  if (!raw) return { kind: "empty" };
+  if (parseHandle(raw)) return { kind: "handle" };
+  if (!raw.includes("://") && !raw.includes("/") && !raw.includes("?") && ENS_NAME.test(raw)) {
+    return { kind: "ens", name: raw.toLowerCase() };
+  }
+  if (
+    !raw.includes("://") &&
+    !raw.includes("/") &&
+    !raw.includes("?") &&
+    !raw.toLowerCase().startsWith("www.") &&
+    BARE_HOST.test(raw)
+  ) {
+    return { kind: "domain", host: stripWww(raw.toLowerCase()) };
+  }
+  return { kind: "url" };
 }
 
 export function normalizeTarget(input: string): NormalizedTarget | null {

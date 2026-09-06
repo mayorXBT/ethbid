@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeTarget } from "./urls";
+import { classifyTarget, normalizeTarget } from "./urls";
 
 describe("normalizeTarget", () => {
   it("accepts @handles", () => {
@@ -30,5 +30,24 @@ describe("normalizeTarget", () => {
 
   it("rejects oversized targets", () => {
     expect(normalizeTarget(`https://${"a".repeat(2_050)}.com`)).toBeNull();
+  });
+});
+
+describe("classifyTarget", () => {
+  it("treats a bare .eth name as ENS", () => {
+    expect(classifyTarget("Ghoste.eth")).toEqual({ kind: "ens", name: "ghoste.eth" });
+  });
+
+  it("treats a bare host as a domain", () => {
+    expect(classifyTarget("example.xyz")).toEqual({ kind: "domain", host: "example.xyz" });
+  });
+
+  it("leaves product URLs as URLs", () => {
+    expect(classifyTarget("https://example.xyz")).toEqual({ kind: "url" });
+    expect(classifyTarget("www.uniswap.org")).toEqual({ kind: "url" });
+  });
+
+  it("leaves @handles as handles", () => {
+    expect(classifyTarget("@Phantom")).toEqual({ kind: "handle" });
   });
 });

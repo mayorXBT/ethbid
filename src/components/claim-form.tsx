@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { CATEGORIES } from "@/lib/categories";
-import { VerifyOwnership, type VerifyMethod } from "@/components/verify-ownership";
+import { TargetVerifyCheck, TargetVerifyStatus, useTargetVerify } from "@/components/verify-ownership";
 import { ethbidConfigured, ethbidContracts } from "@/lib/ethbid/config";
 import { plainEthbidError } from "@/lib/ethbid/errors";
 import { submitEthbidBid } from "@/lib/ethbid/submit";
 import { MAX_BID_USD, MIN_NEW_BID_USD, parseUsd } from "@/lib/money";
-import { normalizeTarget } from "@/lib/urls";
+import { classifyTarget, normalizeTarget } from "@/lib/urls";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
@@ -24,15 +24,14 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [method, setMethod] = useState<VerifyMethod>("ens");
-  const [ens, setEns] = useState("");
-  const [domain, setDomain] = useState("");
+  const [target, setTarget] = useState("");
   const [domainVerified, setDomainVerified] = useState(false);
   const onchain = ethbidConfigured();
   const biddingOpen = onchain;
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
+  const ownership = useTargetVerify(target, setDomainVerified);
 
   function setBid(n: number) {
     const next = Math.min(MAX_BID_USD, Math.max(min, Math.floor(n)));
@@ -60,9 +59,11 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
     setBid(bidUsd);
     try {
       const contracts = ethbidContracts();
-      const target = normalizeTarget(String(form.get("target") ?? ""));
+      const rawTarget = String(form.get("target") ?? "");
+      const listing = normalizeTarget(rawTarget);
+      const identity = classifyTarget(rawTarget);
       if (!contracts) throw new Error("ETHBid contracts are not deployed yet.");
-      if (!target) throw new Error("Need a real URL or @handle.");
+      if (!listing) throw new Error("Need a real URL, domain, or @handle.");
       if (!isConnected || !address) throw new Error("Connect a wallet first.");
       if (!publicClient || !walletClient) throw new Error("Wallet client is not ready.");
       const { hash } = await submitEthbidBid(
@@ -71,11 +72,11 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
         publicClient,
         walletClient,
         {
-          canonicalKey: target.canonicalKey,
-          url: target.url,
-          ensName: method === "ens" ? ens : "",
-          domain: method === "domain" ? domain : undefined,
-          domainVerified: method === "domain" ? domainVerified : false,
+          canonicalKey: listing.canonicalKey,
+          url: listing.url,
+          ensName: identity.kind === "ens" ? identity.name : "",
+          domain: identity.kind === "domain" ? identity.host : undefined,
+          domainVerified: identity.kind === "domain" ? domainVerified : false,
           targetUsdc: bidUsd,
         },
         (step) => {
@@ -110,99 +111,109 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-[minmax(0,1fr)_10.5rem_auto_auto] md:items-center">
-        <Input
-          name="target"
-          required
-          placeholder="product URL or @handle"
-          autoComplete="url"
-          className="col-span-2 h-12 rounded-xl px-4 md:col-span-1"
-        />
-        <div className="relative">
-          <Select
-            name="category"
-            required
-            defaultValue=""
-            className="h-12 rounded-xl px-4 pr-10"
-          >
-            <option value="" disabled>
-              Category
-            </option>
-            {CATEGORIES.map((c) => (
-              <option key={c.slug} value={c.slug}>
-                {c.label}
+      <div className="grid gap-2">
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-[minmax(0,1fr)_10.5rem_auto_auto] md:items-center">
+          <div className="relative col-span-2 md:col-span-1">
+            <TargetVerifyCheck
+              identity={ownership.identity}
+              phase={ownership.phase}
+              onVerify={() => void ownership.verify()}
+            />
+            <Input
+              name="target"
+              required
+              value={target}
+              onChange={(e) => setTarget(e.target.value)}
+              placeholder="product URL and domain"
+              autoComplete="url"
+              className={`h-12 rounded-xl px-4 ${ownership.showCheck ? "pl-11" : ""}`}
+            />
+          </div>
+          <div className="relative">
+            <Select
+              name="category"
+              required
+              defaultValue=""
+              className="h-12 rounded-xl px-4 pr-10"
+            >
+              <option value="" disabled>
+                Category
               </option>
-            ))}
-          </Select>
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-              <path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </span>
-        </div>
-        <div className="flex h-12 items-center gap-1 rounded-xl border border-line bg-panel px-1.5">
-          <button
-            type="button"
-            aria-label="Decrease bid"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg text-muted-foreground hover:text-bid"
-            onClick={() => setBid(amount - 1)}
-          >
-            −
-          </button>
-          <label className="min-w-[4.5rem] px-1 text-center">
-            <span className="block text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Bid</span>
-            <span className="flex items-baseline justify-center text-bid">
-              <span className="text-sm">$</span>
-              <input
-                name="amount"
-                inputMode="numeric"
-                autoComplete="off"
-                aria-label="Bid amount in USDC"
-                value={draft}
-                onChange={(e) => setDraft(e.target.value.replace(/[^\d]/g, ""))}
-                onBlur={commitDraft}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    commitDraft();
-                  }
-                }}
-                style={{ width: `${Math.max(2, draft.length || 1)}ch` }}
-                className="bg-transparent text-center text-xl tabular-nums outline-none"
-              />
+              {CATEGORIES.map((c) => (
+                <option key={c.slug} value={c.slug}>
+                  {c.label}
+                </option>
+              ))}
+            </Select>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                <path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </span>
-          </label>
-          <button
-            type="button"
-            aria-label="Increase bid"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg text-muted-foreground hover:text-bid"
-            onClick={() => setBid(amount + 1)}
+          </div>
+          <div className="flex h-12 items-center gap-1 rounded-xl border border-line bg-panel px-1.5">
+            <button
+              type="button"
+              aria-label="Decrease bid"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg text-muted-foreground hover:text-bid"
+              onClick={() => setBid(amount - 1)}
+            >
+              −
+            </button>
+            <label className="min-w-[4.5rem] px-1 text-center">
+              <span className="block text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Bid</span>
+              <span className="flex items-baseline justify-center text-bid">
+                <span className="text-sm">$</span>
+                <input
+                  name="amount"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  aria-label="Bid amount in USDC"
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value.replace(/[^\d]/g, ""))}
+                  onBlur={commitDraft}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      commitDraft();
+                    }
+                  }}
+                  style={{ width: `${Math.max(2, draft.length || 1)}ch` }}
+                  className="bg-transparent text-center text-xl tabular-nums outline-none"
+                />
+              </span>
+            </label>
+            <button
+              type="button"
+              aria-label="Increase bid"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg text-muted-foreground hover:text-bid"
+              onClick={() => setBid(amount + 1)}
+            >
+              +
+            </button>
+          </div>
+          <Button
+            type="submit"
+            disabled={pending || !biddingOpen}
+            aria-label={biddingOpen ? "Place bid" : "Coming soon"}
+            className={`relative col-span-2 h-12 rounded-full px-8 md:col-span-1 ${biddingOpen ? "" : "!text-transparent"}`}
           >
-            +
-          </button>
+            <span aria-hidden="true" className={biddingOpen ? "hidden" : "absolute text-foreground"}>
+              Coming soon
+            </span>
+            {pending ? "Submitting…" : "Place bid"}
+          </Button>
         </div>
-        <Button
-          type="submit"
-          disabled={pending || !biddingOpen}
-          aria-label={biddingOpen ? "Place bid" : "Coming soon"}
-          className={`relative col-span-2 h-12 rounded-full px-8 md:col-span-1 ${biddingOpen ? "" : "!text-transparent"}`}
-        >
-          <span aria-hidden="true" className={biddingOpen ? "hidden" : "absolute text-foreground"}>
-            Coming soon
-          </span>
-          {pending ? "Submitting…" : "Place bid"}
-        </Button>
+        <TargetVerifyStatus
+          identity={ownership.identity}
+          phase={ownership.phase}
+          message={ownership.message}
+          txt={ownership.txt}
+          wellKnown={ownership.wellKnown}
+          body={ownership.body}
+          onRetry={() => void ownership.verify()}
+        />
       </div>
-      <VerifyOwnership
-        method={method}
-        onMethod={setMethod}
-        ens={ens}
-        onEns={setEns}
-        domain={domain}
-        onDomain={setDomain}
-        domainVerified={domainVerified}
-        onDomainVerified={setDomainVerified}
-      />
       {error ? (
         <p className="text-xs text-heat">{error}</p>
       ) : status ? (

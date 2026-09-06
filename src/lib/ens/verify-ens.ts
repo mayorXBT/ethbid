@@ -107,6 +107,10 @@ export async function lookupEns(client: PublicClient, input: string): Promise<En
   };
 }
 
+export function ensLookupUnread(lookup: EnsLookup): boolean {
+  return !lookup.resolvedAddress && !lookup.registryOwner;
+}
+
 export function matchWalletToEns(wallet: Address, lookup: EnsLookup): EnsMatch {
   const resolved = Boolean(lookup.resolvedAddress && isAddressEqual(wallet, lookup.resolvedAddress));
   const owner = Boolean(lookup.registryOwner && isAddressEqual(wallet, lookup.registryOwner));
