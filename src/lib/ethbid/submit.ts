@@ -1,6 +1,6 @@
 import type { Address, PublicClient, WalletClient } from "viem";
 import { keccak256, parseEther, toBytes } from "viem";
-import { lookupEns, parseEnsName, walletControlsEns } from "@/lib/ens/verify-ens";
+import { ensLookupUnread, lookupEns, parseEnsName, walletControlsEns } from "@/lib/ens/verify-ens";
 import { quoteTokenToUsdc } from "@/lib/uniswap/quote-usdc";
 import { bidRouterAbi, projectRegistryAbi, VerificationDomain, VerificationEns } from "./abi";
 import type { EthbidContracts } from "./config";
@@ -34,6 +34,9 @@ export async function submitEthbidBid(
     onStep?.("ens");
     const lookup = await lookupEns(publicClient, ens);
     if (!lookup) throw new Error("ENS name not found.");
+    if (ensLookupUnread(lookup)) {
+      throw new Error("Could not read that ENS name from Ethereum. Retry.");
+    }
     if (!walletControlsEns(wallet, lookup)) {
       throw new Error("Connected wallet does not control that ENS identity.");
     }

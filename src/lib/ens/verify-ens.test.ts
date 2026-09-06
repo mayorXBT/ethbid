@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   ENS_CCIP_PROBE,
   ENS_UNIVERSAL_RESOLVER_PROBE,
+  ensLookupUnread,
   lookupEns,
   parseEnsName,
   walletControlsEns,
@@ -45,6 +46,17 @@ describe("walletControlsEns", () => {
 
   it("rejects a stranger wallet", () => {
     expect(walletControlsEns("0x3333333333333333333333333333333333333333", lookup)).toBe(false);
+  });
+
+  it("does not treat a blank RPC lookup as control", () => {
+    const blank = {
+      ...lookup,
+      resolvedAddress: null,
+      registryOwner: null,
+    };
+    expect(ensLookupUnread(blank)).toBe(true);
+    expect(walletControlsEns(lookup.resolvedAddress!, blank)).toBe(false);
+    expect(ensLookupUnread(lookup)).toBe(false);
   });
 });
 
