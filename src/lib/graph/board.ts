@@ -1,5 +1,6 @@
 import type { ActivityItem, BoardSnapshot, Listing } from "../types";
 import { rankListings, topBidUsd } from "../ranking";
+import { categoryFromUrl } from "../urls";
 import { graphQuery } from "./client";
 import { ACTIVE_ROUND, CURRENT_LEADERBOARD, RECENT_BID_ACTIVITY } from "./queries";
 
@@ -64,14 +65,26 @@ function projectFromUnknown(value: unknown): GraphProject | null {
   };
 }
 
+function asOwner(value: string): string | null {
+  if (!/^0x[a-fA-F0-9]{40}$/.test(value)) return null;
+  return value.toLowerCase();
+}
+
+function ensAvatarUrl(host: string, verification: string): string | null {
+  if (verification !== "Ens" || !host) return null;
+  return `https://euc.li/${host.toLowerCase()}`;
+}
+
 export function listingFromGraphBid(bid: GraphBid): Listing {
   const uri = bid.project.metadataURI.trim();
   let url = uri;
   let name = `${bid.project.id.slice(0, 10)}…`;
+  let host = "";
   try {
     const parsed = new URL(uri);
     url = parsed.toString();
-    name = parsed.hostname.replace(/^www\./i, "") || name;
+    host = parsed.hostname.replace(/^www\./i, "");
+    name = host || name;
   } catch {
     if (uri) name = uri;
     url = "https://ethbid.longbid.lol";
@@ -87,10 +100,11 @@ export function listingFromGraphBid(bid: GraphBid): Listing {
     handle: null,
     name,
     description,
-    faviconUrl: null,
+    faviconUrl: ensAvatarUrl(host, verification),
     ogImageUrl: null,
-    category: "infra",
+    category: categoryFromUrl(url) ?? "infra",
     verification: verification === "Ens" || verification === "Domain" ? verification : "None",
+    owner: asOwner(bid.project.owner),
     bidUsd: usdcToUsd(bid.canonicalUsdc),
     clickCount: 0,
     createdAt,

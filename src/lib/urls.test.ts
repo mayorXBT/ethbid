@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyTarget, normalizeTarget } from "./urls";
+import { categoryFromUrl, classifyTarget, normalizeTarget, withCategory } from "./urls";
 
 describe("normalizeTarget", () => {
   it("accepts @handles", () => {
@@ -49,5 +49,19 @@ describe("classifyTarget", () => {
 
   it("leaves @handles as handles", () => {
     expect(classifyTarget("@Phantom")).toEqual({ kind: "handle" });
+  });
+});
+
+describe("category query", () => {
+  it("stamps cat without changing the canonical host", () => {
+    const stamped = withCategory("https://demayor.eth/", "social");
+    expect(stamped).toContain("cat=social");
+    expect(categoryFromUrl(stamped)).toBe("social");
+    expect(normalizeTarget(stamped)?.canonicalKey).toBe("web:demayor.eth");
+  });
+
+  it("ignores unknown slugs", () => {
+    expect(withCategory("https://uniswap.org", "not-a-cat")).toBe("https://uniswap.org");
+    expect(categoryFromUrl("https://uniswap.org/?cat=nope")).toBeNull();
   });
 });

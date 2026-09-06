@@ -35,5 +35,31 @@ describe("graph board mapping", () => {
     expect(listing.verification).toBe("Ens");
     expect(listing.description).toBe("ENS verified");
     expect(listing.url).toBe("https://ghoste.xyz/");
+    expect(listing.faviconUrl).toBe("https://euc.li/ghoste.xyz");
+    expect(listing.owner).toBe("0x0f7f971d864360be5daa0c23d16a8e25ebe23179");
+    expect(listing.category).toBe("infra");
+  });
+
+  it("reads category from the registered URL and keeps the ENS mark", () => {
+    const [bid] = parseGraphBids([
+      {
+        id: "0xbid2",
+        canonicalUsdc: "5000000",
+        createdAt: "1788100103",
+        txHash: "0xdef",
+        project: {
+          id: "0x2222222222222222222222222222222222222222222222222222222222222222",
+          owner: "0x8e426701F65f66F5Bec62a0E00a7F5e396900978",
+          verification: "Ens",
+          identityRef: "0x3333",
+          metadataURI: "https://demayor.eth/?cat=social",
+        },
+      },
+    ]);
+    const listing = listingFromGraphBid(bid);
+    expect(listing.name).toBe("demayor.eth");
+    expect(listing.category).toBe("social");
+    expect(listing.faviconUrl).toBe("https://euc.li/demayor.eth");
+    expect(listing.owner).toBe("0x8e426701f65f66f5bec62a0e00a7f5e396900978");
   });
 });

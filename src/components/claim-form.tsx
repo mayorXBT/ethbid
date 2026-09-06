@@ -3,13 +3,13 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { CATEGORIES } from "@/lib/categories";
+import { CATEGORIES, isCategory } from "@/lib/categories";
 import { TargetVerifyCheck, TargetVerifyStatus, useTargetVerify } from "@/components/verify-ownership";
 import { ethbidConfigured, ethbidContracts } from "@/lib/ethbid/config";
 import { plainEthbidError } from "@/lib/ethbid/errors";
 import { submitEthbidBid } from "@/lib/ethbid/submit";
 import { MAX_BID_USD, MIN_NEW_BID_USD, parseUsd } from "@/lib/money";
-import { classifyTarget, normalizeTarget } from "@/lib/urls";
+import { classifyTarget, normalizeTarget, withCategory } from "@/lib/urls";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
@@ -62,8 +62,10 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
       const rawTarget = String(form.get("target") ?? "");
       const listing = normalizeTarget(rawTarget);
       const identity = classifyTarget(rawTarget);
+      const category = String(form.get("category") ?? "");
       if (!contracts) throw new Error("ETHBid contracts are not deployed yet.");
       if (!listing) throw new Error("Need a real URL, domain, or @handle.");
+      if (!isCategory(category)) throw new Error("Pick a category.");
       if (!isConnected || !address) throw new Error("Connect a wallet first.");
       if (!publicClient || !walletClient) throw new Error("Wallet client is not ready.");
       const { hash } = await submitEthbidBid(
@@ -73,7 +75,7 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
         walletClient,
         {
           canonicalKey: listing.canonicalKey,
-          url: listing.url,
+          url: withCategory(listing.url, category),
           ensName: identity.kind === "ens" ? identity.name : "",
           domain: identity.kind === "domain" ? identity.host : undefined,
           domainVerified: identity.kind === "domain" ? domainVerified : false,
