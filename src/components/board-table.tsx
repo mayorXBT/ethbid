@@ -75,6 +75,7 @@ export function BoardTable({ listings }: { listings: RankedListing[] }) {
                 <div className="flex items-start gap-2.5">
                   <ListingMark
                     src={listing.faviconUrl}
+                    owner={listing.owner}
                     name={listing.name}
                     rank={listing.rank}
                     className={icon}

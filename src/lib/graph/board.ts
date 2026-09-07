@@ -1,3 +1,4 @@
+import { addressAvatarUrl, ensAvatarUrl } from "../avatar";
 import type { ActivityItem, BoardSnapshot, Listing } from "../types";
 import { rankListings, topBidUsd } from "../ranking";
 import { categoryFromUrl } from "../urls";
@@ -70,11 +71,6 @@ function asOwner(value: string): string | null {
   return value.toLowerCase();
 }
 
-export function addressAvatarUrl(owner: string | null): string | null {
-  if (!owner) return null;
-  return `https://api.dicebear.com/10.x/avataaars/svg?seed=${encodeURIComponent(owner)}`;
-}
-
 export function listingFromGraphBid(bid: GraphBid): Listing {
   const uri = bid.project.metadataURI.trim();
   let url = uri;
@@ -101,7 +97,7 @@ export function listingFromGraphBid(bid: GraphBid): Listing {
     handle: null,
     name,
     description,
-    faviconUrl: addressAvatarUrl(owner),
+    faviconUrl: ensAvatarUrl(host, verification) ?? addressAvatarUrl(owner),
     ogImageUrl: null,
     category: categoryFromUrl(url) ?? "infra",
     verification: verification === "Ens" || verification === "Domain" ? verification : "None",

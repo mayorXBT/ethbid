@@ -1,7 +1,8 @@
 "use client";
 
+import { addressAvatarUrl } from "@/lib/avatar";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 function glyph(name: string): string {
   const letters = name.replace(/[^a-zA-Z0-9]/g, "").slice(0, 2).toUpperCase();
@@ -10,26 +11,36 @@ function glyph(name: string): string {
 
 export function ListingMark({
   src,
+  owner,
   name,
   rank,
   className,
 }: {
   src: string | null;
+  owner?: string | null;
   name: string;
   rank: number;
   className: string;
 }) {
-  const [failed, setFailed] = useState(false);
+  const sources = useMemo(() => {
+    const next: string[] = [];
+    if (src) next.push(src);
+    const generated = addressAvatarUrl(owner ?? null);
+    if (generated && generated !== src) next.push(generated);
+    return next;
+  }, [src, owner]);
+  const [index, setIndex] = useState(0);
   const size = rank === 1 ? 48 : rank <= 3 ? 44 : 32;
-  if (src && !failed) {
+  const current = sources[index];
+  if (current) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={src}
+        src={current}
         alt=""
         width={size}
         height={size}
-        onError={() => setFailed(true)}
+        onError={() => setIndex((i) => i + 1)}
         className={cn("mt-0.5 shrink-0 rounded-lg object-cover", className)}
       />
     );
