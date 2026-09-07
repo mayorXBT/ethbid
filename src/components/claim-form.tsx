@@ -4,12 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { CATEGORIES, isCategory } from "@/lib/categories";
-import { TargetVerifyCheck, TargetVerifyStatus, useTargetVerify } from "@/components/verify-ownership";
 import { ethbidConfigured, ethbidContracts } from "@/lib/ethbid/config";
 import { plainEthbidError } from "@/lib/ethbid/errors";
-import { submitEthbidBid } from "@/lib/ethbid/submit";
+import { submitEthbidBid, type EthbidStep } from "@/lib/ethbid/submit";
 import { MAX_BID_USD, MIN_NEW_BID_USD, parseUsd } from "@/lib/money";
-import { classifyTarget, normalizeTarget, withCategory } from "@/lib/urls";
+import { normalizeTarget, withCategory } from "@/lib/urls";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
@@ -25,13 +24,11 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
   const [status, setStatus] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [target, setTarget] = useState("");
-  const [domainVerified, setDomainVerified] = useState(false);
   const onchain = ethbidConfigured();
   const biddingOpen = onchain;
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
-  const ownership = useTargetVerify(target, setDomainVerified);
 
   function setBid(n: number) {
     const next = Math.min(MAX_BID_USD, Math.max(min, Math.floor(n)));
@@ -46,10 +43,6 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!onchain) {
-      setError("ETHBid contracts are not configured.");
-      return;
-    }
     setError(null);
     setStatus(null);
     setPending(true);
@@ -61,12 +54,11 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
       const contracts = ethbidContracts();
       const rawTarget = String(form.get("target") ?? "");
       const listing = normalizeTarget(rawTarget);
-      const identity = classifyTarget(rawTarget);
       const category = String(form.get("category") ?? "");
-      if (!contracts) throw new Error("ETHBid contracts are not deployed yet.");
       if (!listing) throw new Error("Need a real URL, domain, or @handle.");
       if (!isCategory(category)) throw new Error("Pick a category.");
       if (!isConnected || !address) throw new Error("Connect a wallet first.");
+      if (!contracts) throw new Error("ETHBid contracts are not deployed yet.");
       if (!publicClient || !walletClient) throw new Error("Wallet client is not ready.");
       const { hash } = await submitEthbidBid(
         contracts,
@@ -76,20 +68,15 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
         {
           canonicalKey: listing.canonicalKey,
           url: withCategory(listing.url, category),
-          ensName: identity.kind === "ens" ? identity.name : "",
-          domain: identity.kind === "domain" ? identity.host : undefined,
-          domainVerified: identity.kind === "domain" ? domainVerified : false,
           targetUsdc: bidUsd,
         },
         (step) => {
-          const copy: Record<string, string> = {
-            ens: "Checking ENS ownership…",
+          const copy = {
             register: "Registering the product…",
-            verify: "Writing verification onchain…",
             swap: "Swapping to USDC…",
             confirmed: "Confirmed.",
-          };
-          setStatus(copy[step] ?? step);
+          } satisfies Record<EthbidStep, string>;
+          setStatus(copy[step]);
         },
       );
       setStatus(`Confirmed. ${hash.slice(0, 10)}…`);
@@ -108,27 +95,22 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
           Rank is the bid.
         </h1>
         <p className="mt-3 max-w-lg text-sm text-muted-foreground">
-          Connect a wallet. Verify ENS or a domain. Bid through Uniswap into canonical USDC.
+          Connect a wallet. Bid through Uniswap into canonical USDC.
           Rank is public on The Graph. Floor ${min} USDC.
         </p>
       </div>
 
       <div className="grid gap-2">
         <div className="grid grid-cols-2 gap-2 md:grid-cols-[minmax(0,1fr)_10.5rem_auto_auto] md:items-center">
-          <div className="relative col-span-2 md:col-span-1">
-            <TargetVerifyCheck
-              identity={ownership.identity}
-              phase={ownership.phase}
-              onVerify={() => void ownership.verify()}
-            />
+          <div className="col-span-2 md:col-span-1">
             <Input
               name="target"
               required
               value={target}
               onChange={(e) => setTarget(e.target.value)}
-              placeholder="product URL and domain"
+              placeholder="product URL or domain"
               autoComplete="url"
-              className={`h-12 rounded-xl px-4 ${ownership.showCheck ? "pl-11" : ""}`}
+              className="h-12 rounded-xl px-4"
             />
           </div>
           <div className="relative">
@@ -206,15 +188,6 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
             {pending ? "Submitting…" : "Place bid"}
           </Button>
         </div>
-        <TargetVerifyStatus
-          identity={ownership.identity}
-          phase={ownership.phase}
-          message={ownership.message}
-          txt={ownership.txt}
-          wellKnown={ownership.wellKnown}
-          body={ownership.body}
-          onRetry={() => void ownership.verify()}
-        />
       </div>
       {error ? (
         <p className="text-xs text-heat">{error}</p>

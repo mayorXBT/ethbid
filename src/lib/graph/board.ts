@@ -1,4 +1,5 @@
-import { addressAvatarUrl, ensAvatarUrl } from "../avatar";
+import { addressAvatarUrl } from "../avatar";
+import { siteFaviconUrl } from "../site-preview";
 import type { ActivityItem, BoardSnapshot, Listing } from "../types";
 import { rankListings, topBidUsd } from "../ranking";
 import { categoryFromUrl } from "../urls";
@@ -87,8 +88,6 @@ export function listingFromGraphBid(bid: GraphBid): Listing {
   }
   const createdAt = unixToIso(bid.createdAt);
   const verification = bid.project.verification;
-  const description =
-    verification === "Ens" ? "ENS verified" : verification === "Domain" ? "Domain verified" : "";
   const owner = asOwner(bid.project.owner);
   return {
     id: bid.project.id,
@@ -96,8 +95,8 @@ export function listingFromGraphBid(bid: GraphBid): Listing {
     url,
     handle: null,
     name,
-    description,
-    faviconUrl: ensAvatarUrl(host, verification) ?? addressAvatarUrl(owner),
+    description: "",
+    faviconUrl: siteFaviconUrl(host) ?? addressAvatarUrl(owner),
     ogImageUrl: null,
     category: categoryFromUrl(url) ?? "infra",
     verification: verification === "Ens" || verification === "Domain" ? verification : "None",

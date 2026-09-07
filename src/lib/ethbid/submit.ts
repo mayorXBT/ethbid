@@ -1,21 +1,17 @@
 import type { Address, PublicClient, WalletClient } from "viem";
-import { keccak256, parseEther, toBytes } from "viem";
-import { ensLookupUnread, lookupEns, parseEnsName, walletControlsEns } from "@/lib/ens/verify-ens";
+import { parseEther } from "viem";
 import { quoteTokenToUsdc } from "@/lib/uniswap/quote-usdc";
-import { bidRouterAbi, projectRegistryAbi, VerificationDomain, VerificationEns } from "./abi";
+import { bidRouterAbi, projectRegistryAbi } from "./abi";
 import type { EthbidContracts } from "./config";
-import { ensIdentityRef, projectIdFromCanonical } from "./ids";
+import { projectIdFromCanonical } from "./ids";
 
 export type EthbidSubmitInput = {
   canonicalKey: string;
   url: string;
-  ensName: string;
-  domain?: string;
-  domainVerified?: boolean;
   targetUsdc: number;
 };
 
-export type EthbidStep = "ens" | "register" | "verify" | "swap" | "confirmed";
+export type EthbidStep = "register" | "swap" | "confirmed";
 
 export async function submitEthbidBid(
   contracts: EthbidContracts,
@@ -26,21 +22,6 @@ export async function submitEthbidBid(
   onStep?: (step: EthbidStep) => void,
 ): Promise<{ projectId: `0x${string}`; hash: `0x${string}` }> {
   const projectId = projectIdFromCanonical(input.canonicalKey);
-  const ens = parseEnsName(input.ensName);
-  if (input.ensName.trim() && !ens) {
-    throw new Error("ENS name not found. Use a name like ghoste.eth.");
-  }
-  if (ens) {
-    onStep?.("ens");
-    const lookup = await lookupEns(publicClient, ens);
-    if (!lookup) throw new Error("ENS name not found.");
-    if (ensLookupUnread(lookup)) {
-      throw new Error("Could not read that ENS name from Ethereum. Retry.");
-    }
-    if (!walletControlsEns(wallet, lookup)) {
-      throw new Error("Connected wallet does not control that ENS identity.");
-    }
-  }
 
   const existing = await publicClient.readContract({
     address: contracts.registry,
@@ -62,30 +43,6 @@ export async function submitEthbidBid(
     await publicClient.waitForTransactionReceipt({ hash });
   } else if (existing.owner.toLowerCase() !== wallet.toLowerCase()) {
     throw new Error("Unauthorized. Only the verified owner can bid.");
-  }
-
-  if (ens) {
-    onStep?.("verify");
-    const hash = await walletClient.writeContract({
-      account: wallet,
-      chain: publicClient.chain,
-      address: contracts.registry,
-      abi: projectRegistryAbi,
-      functionName: "verify",
-      args: [projectId, VerificationEns, ensIdentityRef(ens)],
-    });
-    await publicClient.waitForTransactionReceipt({ hash });
-  } else if (input.domainVerified && input.domain) {
-    onStep?.("verify");
-    const hash = await walletClient.writeContract({
-      account: wallet,
-      chain: publicClient.chain,
-      address: contracts.registry,
-      abi: projectRegistryAbi,
-      functionName: "verify",
-      args: [projectId, VerificationDomain, keccak256(toBytes(input.domain))],
-    });
-    await publicClient.waitForTransactionReceipt({ hash });
   }
 
   const usdcTarget = BigInt(input.targetUsdc) * 1_000_000n;

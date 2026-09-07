@@ -1,6 +1,6 @@
 # Place a bid
 
-Place a bid lets a founder connect a wallet, verify ENS or a domain, and send an onchain bid through Uniswap into canonical USDC. There is no `/pay` checkout and no Crossmint or MoonPay path.
+Place a bid lets a founder type a product URL or domain, pick a category and bid amount, connect a wallet, and send an onchain bid through Uniswap into canonical USDC. There is no `/pay` checkout and no Crossmint or MoonPay path. The form does not verify ENS or a domain.
 
 ## Sub-features
 
@@ -11,7 +11,7 @@ Place a bid lets a founder connect a wallet, verify ENS or a domain, and send an
 
 ## How to get to it (user POV)
 
-- Fill the form on `/` (target, category, bid, ENS or domain) and choose `Place bid`.
+- Fill the form on `/` (product URL or domain, category, bid) and choose `Place bid`.
 
 ## Driving it with verify-longbid
 
@@ -33,3 +33,4 @@ Preconditions:
 - Isolated launch blanks Graph. The board is the file-store empty state, not production rank.
 - Do not POST `/api/bids`. That route is gone.
 - `Coming soon` may still exist in the DOM as hidden text when bidding is open. Assert `aria-label="Place bid"`.
+- Do not look for an ENS or domain verify control, a TXT record, or a `/.well-known` challenge on this form.

@@ -41,9 +41,11 @@ describe("graph board mapping", () => {
     expect(listing.name).toBe("ghoste.xyz");
     expect(listing.bidUsd).toBe(12);
     expect(listing.verification).toBe("Ens");
-    expect(listing.description).toBe("ENS verified");
+    expect(listing.description).toBe("");
     expect(listing.url).toBe("https://ghoste.xyz/");
-    expect(listing.faviconUrl).toBe("https://euc.li/ghoste.xyz");
+    expect(listing.faviconUrl).toBe(
+      "https://www.google.com/s2/favicons?domain=ghoste.xyz&sz=128",
+    );
     expect(listing.owner).toBe("0x0f7f971d864360be5daa0c23d16a8e25ebe23179");
     expect(listing.category).toBe("infra");
   });
