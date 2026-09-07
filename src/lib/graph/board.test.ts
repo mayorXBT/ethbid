@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { listingFromGraphBid, parseGraphBids, unixToIso, usdcToUsd } from "./board";
+import { addressAvatarUrl, listingFromGraphBid, parseGraphBids, unixToIso, usdcToUsd } from "./board";
 
 describe("graph board mapping", () => {
+  it("builds a DiceBear mark from the owner address", () => {
+    expect(addressAvatarUrl("0x8e426701f65f66f5bec62a0e00a7f5e396900978")).toBe(
+      "https://api.dicebear.com/10.x/avataaars/svg?seed=0x8e426701f65f66f5bec62a0e00a7f5e396900978",
+    );
+    expect(addressAvatarUrl(null)).toBeNull();
+  });
+
   it("converts canonical USDC units to dollars", () => {
     expect(usdcToUsd("5000000")).toBe(5);
     expect(usdcToUsd("0")).toBe(0);
@@ -35,7 +42,9 @@ describe("graph board mapping", () => {
     expect(listing.verification).toBe("Ens");
     expect(listing.description).toBe("ENS verified");
     expect(listing.url).toBe("https://ghoste.xyz/");
-    expect(listing.faviconUrl).toBe("https://euc.li/ghoste.xyz");
+    expect(listing.faviconUrl).toBe(
+      "https://api.dicebear.com/10.x/avataaars/svg?seed=0x0f7f971d864360be5daa0c23d16a8e25ebe23179",
+    );
     expect(listing.owner).toBe("0x0f7f971d864360be5daa0c23d16a8e25ebe23179");
     expect(listing.category).toBe("infra");
   });
@@ -59,7 +68,9 @@ describe("graph board mapping", () => {
     const listing = listingFromGraphBid(bid);
     expect(listing.name).toBe("demayor.eth");
     expect(listing.category).toBe("social");
-    expect(listing.faviconUrl).toBe("https://euc.li/demayor.eth");
+    expect(listing.faviconUrl).toBe(
+      "https://api.dicebear.com/10.x/avataaars/svg?seed=0x8e426701f65f66f5bec62a0e00a7f5e396900978",
+    );
     expect(listing.owner).toBe("0x8e426701f65f66f5bec62a0e00a7f5e396900978");
   });
 });

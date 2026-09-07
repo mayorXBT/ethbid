@@ -70,9 +70,9 @@ function asOwner(value: string): string | null {
   return value.toLowerCase();
 }
 
-function ensAvatarUrl(host: string, verification: string): string | null {
-  if (verification !== "Ens" || !host) return null;
-  return `https://euc.li/${host.toLowerCase()}`;
+export function addressAvatarUrl(owner: string | null): string | null {
+  if (!owner) return null;
+  return `https://api.dicebear.com/10.x/avataaars/svg?seed=${encodeURIComponent(owner)}`;
 }
 
 export function listingFromGraphBid(bid: GraphBid): Listing {
@@ -93,6 +93,7 @@ export function listingFromGraphBid(bid: GraphBid): Listing {
   const verification = bid.project.verification;
   const description =
     verification === "Ens" ? "ENS verified" : verification === "Domain" ? "Domain verified" : "";
+  const owner = asOwner(bid.project.owner);
   return {
     id: bid.project.id,
     canonicalKey: bid.project.id,
@@ -100,11 +101,11 @@ export function listingFromGraphBid(bid: GraphBid): Listing {
     handle: null,
     name,
     description,
-    faviconUrl: ensAvatarUrl(host, verification),
+    faviconUrl: addressAvatarUrl(owner),
     ogImageUrl: null,
     category: categoryFromUrl(url) ?? "infra",
     verification: verification === "Ens" || verification === "Domain" ? verification : "None",
-    owner: asOwner(bid.project.owner),
+    owner,
     bidUsd: usdcToUsd(bid.canonicalUsdc),
     clickCount: 0,
     createdAt,
