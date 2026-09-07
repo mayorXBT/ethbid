@@ -1,9 +1,15 @@
+import { ListingMark } from "@/components/listing-mark";
 import { categoryLabel } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 import { formatUsd } from "@/lib/money";
 import type { RankedListing } from "@/lib/types";
 import { displayHost } from "@/lib/urls";
 import Link from "next/link";
+
+function shortOwner(value: string): string {
+  if (!/^0x[a-fA-F0-9]{40}$/.test(value)) return value;
+  return `${value.slice(0, 6)}…${value.slice(-4)}`;
+}
 
 function listedAt(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -67,18 +73,13 @@ export function BoardTable({ listings }: { listings: RankedListing[] }) {
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-start gap-2.5">
-                  {listing.faviconUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={listing.faviconUrl}
-                      alt=""
-                      width={listing.rank === 1 ? 48 : listing.rank <= 3 ? 44 : 32}
-                      height={listing.rank === 1 ? 48 : listing.rank <= 3 ? 44 : 32}
-                      className={cn("mt-0.5 shrink-0 rounded-lg", icon)}
-                    />
-                  ) : (
-                    <div className={cn("mt-0.5 shrink-0 rounded-lg bg-muted", icon)} />
-                  )}
+                  <ListingMark
+                    src={listing.faviconUrl}
+                    owner={listing.owner}
+                    name={listing.name}
+                    rank={listing.rank}
+                    className={icon}
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
                       <p
@@ -122,6 +123,20 @@ export function BoardTable({ listings }: { listings: RankedListing[] }) {
                             ? "Domain verified"
                             : categoryLabel(listing.category)}
                       </span>
+                      {listing.verification && listing.verification !== "None" ? (
+                        <>
+                          <span className="text-mute/50">·</span>
+                          <span className="text-mute">{categoryLabel(listing.category)}</span>
+                        </>
+                      ) : null}
+                      {listing.owner ? (
+                        <>
+                          <span className="text-mute/50">·</span>
+                          <span className="font-mono text-mute" title={listing.owner}>
+                            {shortOwner(listing.owner)}
+                          </span>
+                        </>
+                      ) : null}
                       <span className="text-mute/50">·</span>
                       <span className="text-mute">{listedAt(listing.updatedAt)}</span>
                       <span className="text-mute/50">·</span>

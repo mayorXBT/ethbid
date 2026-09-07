@@ -1,3 +1,5 @@
+import { isCategory, type CategorySlug } from "./categories";
+
 const TRACKING_PARAMS = new Set([
   "utm_source",
   "utm_medium",
@@ -184,5 +186,26 @@ export function displayHost(url: string): string {
     return stripWww(new URL(url).hostname);
   } catch {
     return url;
+  }
+}
+
+export function withCategory(url: string, slug: string): string {
+  if (!isCategory(slug)) return url;
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.set("cat", slug);
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+export function categoryFromUrl(url: string): CategorySlug | null {
+  try {
+    const slug = new URL(url).searchParams.get("cat");
+    if (slug && isCategory(slug)) return slug;
+    return null;
+  } catch {
+    return null;
   }
 }

@@ -14,6 +14,7 @@ export interface Listing {
   ogImageUrl: string | null;
   category: CategorySlug;
   verification?: VerificationKind;
+  owner?: string | null;
   bidUsd: number;
   clickCount: number;
   createdAt: string;
