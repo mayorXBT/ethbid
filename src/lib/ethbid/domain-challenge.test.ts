@@ -8,6 +8,9 @@ describe("domain challenge matching", () => {
   it("normalizes a host", () => {
     expect(normalizeDomain("https://www.Example.XYZ/path")).toBe("example.xyz");
     expect(normalizeDomain("not a domain")).toBeNull();
+    expect(normalizeDomain("127.0.0.1")).toBeNull();
+    expect(normalizeDomain("localhost")).toBeNull();
+    expect(normalizeDomain("http://169.254.169.254")).toBeNull();
   });
 
   it("matches well-known JSON", () => {
