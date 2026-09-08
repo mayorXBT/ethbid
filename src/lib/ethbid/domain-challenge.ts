@@ -34,21 +34,30 @@ async function save(rows: DomainChallenge[]) {
   await writeFile(DATA_PATH, JSON.stringify(rows, null, 2));
 }
 
+const HOST_RE = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
+const IPV4_RE = /^(?:\d{1,3}\.){3}\d{1,3}$/;
+const BLOCKED_TLDS = new Set(["local", "localhost", "internal", "arpa", "invalid", "onion"]);
+
 export function normalizeDomain(input: string): string | null {
   const trimmed = input.trim().toLowerCase();
-  if (!trimmed || trimmed.includes(" ")) return null;
+  if (!trimmed || trimmed.length > 253 || trimmed.includes(" ")) return null;
   let host = trimmed;
   if (trimmed.includes("://")) {
     try {
-      host = new URL(trimmed).hostname;
+      const parsed = new URL(trimmed);
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+      host = parsed.hostname;
     } catch {
       return null;
     }
-  } else if (trimmed.includes("/")) {
+  } else if (trimmed.includes("/") || trimmed.includes("?") || trimmed.includes("#")) {
     return null;
   }
-  host = host.replace(/^www\./, "");
-  if (!host.includes(".") || host.length < 3) return null;
+  host = host.replace(/^www\./, "").replace(/\.$/, "");
+  if (IPV4_RE.test(host) || host.includes(":")) return null;
+  if (!HOST_RE.test(host)) return null;
+  const tld = host.slice(host.lastIndexOf(".") + 1);
+  if (BLOCKED_TLDS.has(tld) || host === "localhost") return null;
   return host;
 }
 
