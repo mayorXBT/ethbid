@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     template: "%s · ETHBid",
   },
   description:
-    "Onchain discovery market for crypto products. Verify ownership. Bid through Uniswap into canonical USDC. Rank anyone can reconstruct from The Graph.",
+    "Onchain discovery market for crypto products. Verify ownership. Bid Paxos USDG on Arbitrum. Rank anyone can reconstruct from the contracts.",
   openGraph: {
     title: "ETHBid. Rank is the onchain bid.",
     description: "Verify. Bid. Rank. Reconstruct it from contracts and The Graph.",

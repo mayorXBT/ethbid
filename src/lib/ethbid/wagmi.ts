@@ -2,23 +2,20 @@
 
 import { injected } from "@wagmi/core";
 import { http, createConfig } from "wagmi";
-import { mainnet, sepolia } from "wagmi/chains";
+import { mainnet } from "wagmi/chains";
+import { DEFAULT_CHAIN_ID, ENS_MAINNET_RPC, ETHBID_NETWORKS, networkOrDefault } from "./chains";
 import { ethbidContracts } from "./config";
 
-const chainId = ethbidContracts()?.chainId ?? 1;
-const chain = chainId === 1 ? mainnet : sepolia;
-const mainnetRpc =
-  process.env.NEXT_PUBLIC_ETH_RPC_URL?.trim() || "https://ethereum-rpc.publicnode.com";
-const sepoliaRpc =
-  process.env.NEXT_PUBLIC_ETH_SEPOLIA_RPC_URL?.trim() ||
-  "https://ethereum-sepolia-rpc.publicnode.com";
+const configured = ethbidContracts();
+const settlement = networkOrDefault(configured?.chainId ?? DEFAULT_CHAIN_ID);
+const extra = ETHBID_NETWORKS.filter((network) => network.id !== settlement.id && network.id !== mainnet.id);
 
 export const wagmiConfig = createConfig({
-  chains: [chain, chain === sepolia ? mainnet : sepolia],
+  chains: [settlement.chain, mainnet, ...extra.map((network) => network.chain)],
   connectors: [injected()],
   transports: {
-    [mainnet.id]: http(mainnetRpc),
-    [sepolia.id]: http(sepoliaRpc),
+    [mainnet.id]: http(ENS_MAINNET_RPC),
+    ...Object.fromEntries(ETHBID_NETWORKS.map((network) => [network.id, http(network.rpc)])),
   },
   ssr: true,
 });

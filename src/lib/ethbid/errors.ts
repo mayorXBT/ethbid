@@ -5,7 +5,10 @@ export function plainEthbidError(err: unknown): string {
     return "Signature rejected. Try again when you are ready.";
   }
   if (lower.includes("chain mismatch") || lower.includes("wrong network") || lower.includes("chain id")) {
-    return "Wrong network. Switch the wallet to the ETHBid chain.";
+    return "Wrong network. Switch the wallet to Arbitrum Sepolia.";
+  }
+  if (lower.includes("need") && lower.includes("faucet")) {
+    return raw.slice(0, 240);
   }
   if (lower.includes("connect a wallet") || lower.includes("connector")) {
     return "Connect a wallet first.";

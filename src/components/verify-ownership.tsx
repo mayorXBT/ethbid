@@ -1,8 +1,9 @@
 "use client";
 
+import { ensMainnetClient } from "@/lib/ens/client";
 import { ensLookupUnread, lookupEns, parseEnsName, walletControlsEns } from "@/lib/ens/verify-ens";
 import { classifyTarget, type TargetIdentity } from "@/lib/urls";
-import { useAccount, usePublicClient } from "wagmi";
+import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
 
 export type VerifyPhase = "idle" | "pending" | "success" | "failed";
@@ -10,7 +11,6 @@ export type VerifyPhase = "idle" | "pending" | "success" | "failed";
 export function useTargetVerify(value: string, onDomainVerified: (ok: boolean) => void) {
   const identity = classifyTarget(value);
   const { address, isConnected } = useAccount();
-  const publicClient = usePublicClient();
   const [phase, setPhase] = useState<VerifyPhase>("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [txt, setTxt] = useState<string | null>(null);
@@ -36,11 +36,6 @@ export function useTargetVerify(value: string, onDomainVerified: (ok: boolean) =
       return;
     }
     if (identity.kind === "ens") {
-      if (!publicClient) {
-        setPhase("failed");
-        setMessage("Wallet client is not ready.");
-        return;
-      }
       const ens = parseEnsName(identity.name);
       if (!ens) {
         setPhase("failed");
@@ -48,7 +43,7 @@ export function useTargetVerify(value: string, onDomainVerified: (ok: boolean) =
         return;
       }
       setPhase("pending");
-      const lookup = await lookupEns(publicClient, ens);
+      const lookup = await lookupEns(ensMainnetClient(), ens);
       if (!lookup) {
         setPhase("failed");
         setMessage("ENS name not found.");

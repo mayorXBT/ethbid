@@ -120,6 +120,15 @@ contract RankingRoundTest is Test {
         assertLt(first, ranking.firstBidAt(1, second));
     }
 
+    function test_setTreasuryRejectsZero() public {
+        vm.prank(admin);
+        vm.expectRevert(RankingRound.ZeroTreasury.selector);
+        ranking.setTreasury(address(0));
+        vm.prank(admin);
+        ranking.setTreasury(address(0x1111));
+        assertEq(ranking.treasury(), address(0x1111));
+    }
+
     function test_placeBidEmitsBidPlaced() public {
         vm.expectEmit(true, true, true, true, address(ranking));
         emit RankingRound.BidPlaced(1, projectId, owner, 25e6, 25e6);

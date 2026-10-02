@@ -42,7 +42,7 @@ node .cursor/skills/verify-longbid/scripts/doctor.mjs --baseline
 
 Worth driving when doctor prints `"ok": true`. It checks: state url/port, pid alive, `GET /` 200 with Longbid identity and `aria-label="Place bid"`, `GET /api/listings` JSON shape, `GET /rules` and `GET /about` copy.
 
-`--baseline` also requires the seeded empty board (`Board is empty. First $5 USDC listing takes #1.` and `listings.length === 0`). Run `--baseline` right after launch. Do not use it after a mutating recipe.
+`--baseline` also requires the seeded empty board (`Board is empty. First canonical USDG bid this round takes #1.` and `listings.length === 0`). Run `--baseline` right after launch. Do not use it after a mutating recipe.
 
 If anything looks off, doctor first. An instance that talks to hosted Supabase is not this verify instance: listings will not be empty after a fresh launch, and you must stop and relaunch rather than write to it.
 
@@ -81,10 +81,10 @@ Stable handles from this repo (prefer these over coordinates):
 | Mobile menu | `aria-label` `Open menu` / `Close menu` (`md:hidden`) |
 | Target field | `input[name="target"]` placeholder `product URL or @handle` |
 | Category | `select[name="category"]` (required; first option `Category` is disabled) |
-| Bid amount | `aria-label="Bid amount in USDC"` |
+| Bid amount | `aria-label="Bid amount in USDG"` |
 | Decrease / increase bid | `aria-label="Decrease bid"` / `Increase bid` |
 | Submit | `aria-label="Place bid"` when bidding is open |
-| Empty board | exact text `Board is empty. First canonical USDC bid this round takes #1.` |
+| Empty board | exact text `Board is empty. First canonical USDG bid this round takes #1.` |
 
 Category slugs that the form accepts: `l1s-l2s`, `defi`, `wallets`, `ai-crypto`, `infra`, `stablecoins`, `nfts-gaming`, `analytics`, `exchanges`, `social`.
 

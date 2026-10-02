@@ -40,7 +40,7 @@ check("listings-shape", Array.isArray(board.listings) && Array.isArray(board.act
 
 const baseline = process.argv.includes("--baseline");
 if (baseline) {
-  check("home-empty-board", home.text.includes("Board is empty. First canonical USDC bid this round takes #1."), "empty-board copy missing; instance may not be the seeded file store");
+  check("home-empty-board", home.text.includes("Board is empty. First canonical USDG bid this round takes #1."), "empty-board copy missing; instance may not be the seeded file store");
   check("listings-empty", board.listings.length === 0, `expected empty board, got ${board.listings.length} listings — do not drive a shared/prod store`);
 }
 
