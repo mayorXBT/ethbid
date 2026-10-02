@@ -21,18 +21,8 @@ export async function Header() {
         <Link href="/" className="flex min-w-0 items-center gap-1.5 justify-self-start sm:gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-bid.png" alt="" width={32} height={32} className="h-7 w-7 shrink-0 sm:h-8 sm:w-8" />
-          <span className="flex min-w-0 items-center gap-1.5">
-            <span className="truncate text-sm font-semibold tracking-tight text-foreground sm:text-base">
-              ETHBid
-            </span>
-            {copy.testnetBadge ? (
-              <span
-                title={copy.testnetBadge}
-                className="max-w-[6.75rem] truncate rounded-[2px] border border-bid/45 px-1 py-px text-[8px] uppercase leading-tight tracking-[0.08em] text-bid sm:max-w-none sm:text-[10px] sm:tracking-[0.12em]"
-              >
-                {copy.testnetBadge}
-              </span>
-            ) : null}
+          <span className="truncate text-sm font-semibold tracking-tight text-foreground sm:text-base">
+            ETHBid
           </span>
         </Link>
 
@@ -57,19 +47,23 @@ export async function Header() {
           </span>
         </div>
 
-        <div className="justify-self-end">
+        <div className="flex items-center justify-end gap-2 justify-self-end sm:gap-3">
+          {copy.faucetStable ? (
+            <a
+              href={copy.faucetStable}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-8 shrink-0 items-center border border-bid/40 px-2 text-[10px] uppercase tracking-[0.12em] text-bid hover:bg-bid/10 sm:px-2.5 sm:text-[11px] sm:tracking-[0.14em]"
+            >
+              Get test {copy.asset}
+            </a>
+          ) : null}
           <nav className="hidden items-center justify-end gap-4 text-[12px] uppercase tracking-[0.14em] text-muted-foreground md:flex">
-            <Link href="/" className="hover:text-bid">
-              Board
-            </Link>
             <Link href="/rules" className="hover:text-bid">
               Rules
             </Link>
             <Link href="/about" className="hover:text-bid">
               About
-            </Link>
-            <Link href="/verify" className="hover:text-bid">
-              Verify
             </Link>
             <WalletButton />
             <ThemeToggle />

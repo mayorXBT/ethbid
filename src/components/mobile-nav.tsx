@@ -7,10 +7,8 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 const LINKS = [
-  { href: "/", label: "Board" },
   { href: "/rules", label: "Rules" },
   { href: "/about", label: "About" },
-  { href: "/verify", label: "Verify" },
 ];
 
 export function MobileNav() {
