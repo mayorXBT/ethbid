@@ -192,7 +192,7 @@ export async function getLogsBoard(contracts: EthbidContracts): Promise<BoardSna
   const activity: ActivityItem[] = [];
   const recent = activitySource.sort((a, b) => Number(b.block - a.block)).slice(0, 20);
   for (const event of recent) {
-    const createdAt = unixToIso(event.block.toString());
+    const createdAt = unixToIso((await blockTime(event.block)).toString());
     activity.push({
       id: event.tx,
       listingId: event.bid.projectId,
