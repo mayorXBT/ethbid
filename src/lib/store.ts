@@ -2,6 +2,8 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { serverEnv } from "./env";
+import { ethbidContracts } from "./ethbid/config";
+import { getLogsBoard } from "./ethbid/logs";
 import { getGraphBoard } from "./graph/board";
 import { graphConfigured } from "./graph/client";
 import { pg } from "./pg";
@@ -322,9 +324,33 @@ export async function getActivity(limit = 20): Promise<ActivityItem[]> {
 }
 
 export async function getBoard(): Promise<BoardSnapshot> {
-  if (graphConfigured()) {
-    return getGraphBoard();
+  if (serverEnv("ETHBID_FILE_STORE") === "1") {
+    const listings = await getListings();
+    const ranked = rankListings(listings);
+    const activity = await getActivity();
+    const stats = await getStats();
+    stats.listings = ranked.length;
+    stats.volumeUsd = ranked.reduce((s, l) => s + l.bidUsd, 0);
+    stats.clicks = ranked.reduce((s, l) => s + l.clickCount, 0);
+    return {
+      listings: ranked,
+      activity,
+      stats,
+      topBidUsd: topBidUsd(listings),
+    };
   }
+  const contracts = ethbidContracts();
+  // The published subgraph indexes Ethereum mainnet. Arbitrum and Robinhood
+  // boards read BidPlaced logs from the settlement RPC.
+  if (graphConfigured() && (!contracts || contracts.chainId === 1)) {
+    try {
+      return await getGraphBoard();
+    } catch {
+      if (contracts) return getLogsBoard(contracts);
+      throw new Error("Graph query failed and no contract fallback is configured.");
+    }
+  }
+  if (contracts) return getLogsBoard(contracts);
   const listings = await getListings();
   const ranked = rankListings(listings);
   const activity = await getActivity();

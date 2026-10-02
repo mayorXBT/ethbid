@@ -2,9 +2,11 @@ specVersion: 1.0.0
 schema:
   file: ./schema.graphql
 description: >
-  ETHBid ranking subgraph. Indexes ProjectRegistry and RankingRound on
-  Ethereum mainnet from the 2026-08-30 deploy. Round ids are 32-byte padded
-  so they match src/lib/graph/queries.ts.
+  ETHBid ranking subgraph. Ethereum mainnet from the 2026-08-30 deploy is
+  historical. For the buildathon, redeploy with network: arbitrum-sepolia
+  and the Arbitrum Sepolia addresses in contracts/deployments.md. The app
+  falls back to viem getLogs on /verify if this subgraph is not live.
+  Round ids are 32-byte padded so they match src/lib/graph/queries.ts.
 dataSources:
   - kind: ethereum
     name: ProjectRegistry
