@@ -4,7 +4,8 @@ import { Header } from "@/components/header";
 import { BoardTable } from "@/components/board-table";
 import { LiveRefresh } from "@/components/live-refresh";
 import { PaidFlash } from "@/components/paid-flash";
-import { formatUsd, MIN_NEW_BID_USD, TOP_SPOT_PREMIUM_USD } from "@/lib/money";
+import { settlementCopy } from "@/lib/ethbid/copy";
+import { formatBid, MIN_NEW_BID_USD, TOP_SPOT_PREMIUM_USD } from "@/lib/money";
 import { getBoard } from "@/lib/store";
 import { Suspense } from "react";
 
@@ -17,6 +18,7 @@ export default async function HomePage() {
     stats: { online: 0, visitors: 0, listings: 0, volumeUsd: 0, clicks: 0 },
     topBidUsd: 0,
   }));
+  const copy = settlementCopy();
   const defaultBid = Math.max(MIN_NEW_BID_USD, board.topBidUsd + TOP_SPOT_PREMIUM_USD);
 
   return (
@@ -35,7 +37,7 @@ export default async function HomePage() {
 
         <section className="pt-8">
           <p className="mb-4 text-right text-[11px] text-muted-foreground">
-            {board.listings.length} products · {formatUsd(board.stats.volumeUsd)} USDG this round
+            {board.listings.length} products · {formatBid(board.stats.volumeUsd, copy.asset)} this round
           </p>
           <BoardTable listings={board.listings} />
           <ActivityFeed items={board.activity} />

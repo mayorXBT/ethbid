@@ -5,18 +5,20 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { CATEGORIES, isCategory } from "@/lib/categories";
 import { NetworkSwitch } from "@/components/network-switch";
+import { explorerTxUrl } from "@/lib/ethbid/chains";
 import { ethbidConfigured, ethbidContracts } from "@/lib/ethbid/config";
-import { networkOrDefault } from "@/lib/ethbid/chains";
+import { settlementCopy } from "@/lib/ethbid/copy";
 import { plainEthbidError } from "@/lib/ethbid/errors";
 import { submitEthbidBid, type EthbidStep } from "@/lib/ethbid/submit";
 import { MAX_BID_USD, MIN_NEW_BID_USD, parseUsd } from "@/lib/money";
 import { normalizeTarget, withCategory } from "@/lib/urls";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 
 export function ClaimForm({ defaultBid }: { defaultBid: number }) {
   const params = useSearchParams();
+  const router = useRouter();
   const min = MIN_NEW_BID_USD;
   const seeded = Number(params.get("amount") ?? "");
   const start = Number.isFinite(seeded) && seeded >= min ? seeded : defaultBid;
@@ -24,12 +26,12 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
   const [draft, setDraft] = useState(String(start));
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [txHash, setTxHash] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [target, setTarget] = useState("");
   const onchain = ethbidConfigured();
   const biddingOpen = onchain;
-  const contractsNow = ethbidContracts();
-  const network = networkOrDefault(contractsNow?.chainId ?? 421614);
+  const copy = settlementCopy();
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
@@ -49,6 +51,7 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
     e.preventDefault();
     setError(null);
     setStatus(null);
+    setTxHash(null);
     setPending(true);
     const form = new FormData(e.currentTarget);
     const parsed = parseUsd(draft);
@@ -76,23 +79,28 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
         },
         (step) => {
           const asset = contracts.bidAsset;
-          const copy = {
+          const labels = {
             register: "Registering the product…",
             approve: `Approving ${asset}…`,
             bid: `Placing ${asset} bid…`,
             swap: `Swapping to ${asset}…`,
             confirmed: "Confirmed.",
           } satisfies Record<EthbidStep, string>;
-          setStatus(copy[step]);
+          setStatus(labels[step]);
         },
       );
-      setStatus(`Confirmed. ${hash.slice(0, 10)}…`);
+      setTxHash(hash);
+      setStatus("Confirmed.");
+      router.refresh();
     } catch (err) {
       setError(plainEthbidError(err));
     } finally {
       setPending(false);
     }
   }
+
+  const pendingLabel =
+    pending && status && !status.startsWith("Confirmed") ? status : pending ? "Submitting…" : "Place bid";
 
   return (
     <form onSubmit={onSubmit} className="grid gap-6">
@@ -102,8 +110,8 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
           Rank is the bid.
         </h1>
         <p className="mt-3 max-w-lg text-sm text-muted-foreground">
-          Connect a wallet on {network.label}. Bid {network.bidAsset} onchain.
-          Rank is public from the contracts. Floor ${min} {network.bidAsset}.
+          Connect a wallet on {copy.label}. Bid {copy.asset} onchain.
+          Rank is public from the contracts. Floor ${min} {copy.asset}.
         </p>
       </div>
 
@@ -115,7 +123,7 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
               required
               value={target}
               onChange={(e) => setTarget(e.target.value)}
-              placeholder="product URL or domain"
+              placeholder="product URL or @handle"
               autoComplete="url"
               className="h-12 rounded-xl px-4"
             />
@@ -159,7 +167,7 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
                   name="amount"
                   inputMode="numeric"
                   autoComplete="off"
-                  aria-label={`Bid amount in ${network.bidAsset}`}
+                  aria-label={`Bid amount in ${copy.asset}`}
                   value={draft}
                   onChange={(e) => setDraft(e.target.value.replace(/[^\d]/g, ""))}
                   onBlur={commitDraft}
@@ -192,46 +200,55 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
             <span aria-hidden="true" className={biddingOpen ? "hidden" : "absolute text-foreground"}>
               Coming soon
             </span>
-            {pending ? "Submitting…" : "Place bid"}
+            {pendingLabel}
           </Button>
         </div>
       </div>
+
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <NetworkSwitch />
+        {copy.faucetStable ? (
+          <a
+            href={copy.faucetStable}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex h-8 items-center border border-bid/40 px-2.5 text-[11px] uppercase tracking-[0.14em] text-bid hover:bg-bid/10"
+          >
+            Get test {copy.asset}
+          </a>
+        ) : null}
+        {copy.faucetEth ? (
+          <a
+            href={copy.faucetEth}
+            target="_blank"
+            rel="noreferrer"
+            className="text-[11px] text-muted-foreground underline-offset-2 hover:text-bid hover:underline"
+          >
+            ETH faucet
+          </a>
+        ) : null}
+      </div>
+
       {error ? (
         <p className="text-xs text-heat">{error}</p>
       ) : status ? (
-        <p className="text-xs text-bid">{status}</p>
-      ) : (
-        <p className="text-[11px] text-muted-foreground">
-          <NetworkSwitch />
-          {network.faucetEth ? (
+        <p className="text-xs text-bid">
+          {status}
+          {txHash ? (
             <>
               {" "}
-              ETH faucet:{" "}
-              <a className="underline hover:text-bid" href={network.faucetEth} target="_blank" rel="noreferrer">
-                {network.faucetEth.replace(/^https:\/\//, "")}
-              </a>
-            </>
-          ) : null}
-          {network.faucetStable ? (
-            <>
-              {" "}
-              {network.bidAsset} faucet:{" "}
-              <a className="underline hover:text-bid" href={network.faucetStable} target="_blank" rel="noreferrer">
-                faucet.paxos.com
-              </a>
-            </>
-          ) : null}
-          {network.faucetCircle ? (
-            <>
-              {" "}
-              Circle:{" "}
-              <a className="underline hover:text-bid" href={network.faucetCircle} target="_blank" rel="noreferrer">
-                faucet.circle.com
+              <a
+                className="underline hover:text-foreground"
+                href={explorerTxUrl(copy.chainId, txHash)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {txHash.slice(0, 10)}…
               </a>
             </>
           ) : null}
         </p>
-      )}
+      ) : null}
     </form>
   );
 }

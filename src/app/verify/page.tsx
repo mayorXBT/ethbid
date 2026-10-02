@@ -3,8 +3,9 @@ import { CURRENT_LEADERBOARD } from "@/lib/graph/queries";
 import { ethbidContracts } from "@/lib/ethbid/config";
 import { rankingRoundAbi } from "@/lib/ethbid/abi";
 import { explorerAddressUrl, networkOrDefault } from "@/lib/ethbid/chains";
+import { graphQueryUrl, reconstructFrom, settlementCopy } from "@/lib/ethbid/copy";
 import { getLogsBids } from "@/lib/ethbid/logs";
-import { RANKING_FORMULA, TIE_BREAK } from "@/lib/ethbid/ranking-formula";
+import { rankingFormula, tieBreak } from "@/lib/ethbid/ranking-formula";
 import { graphEndpoint, graphQuery } from "@/lib/graph/client";
 import { createPublicClient, http } from "viem";
 import type { Metadata } from "next";
@@ -68,12 +69,15 @@ async function loadBoard(roundId: bigint) {
 }
 
 export default async function VerifyRankingPage() {
+  const copy = settlementCopy();
   const round = await loadRound();
   const graph = round ? await loadBoard(round.roundId) : { ok: false as const, error: "No active round to query." };
-  const subgraph = process.env.GRAPH_SUBGRAPH_URL?.trim() || "not configured (using contract event logs)";
+  const indexUrl = graphQueryUrl();
   const remaining =
     round && round.end > 0n ? Math.max(0, Number(round.end) - Math.floor(Date.now() / 1000)) : null;
-  const asset = round?.contracts.bidAsset ?? "USDG";
+  const asset = round?.contracts.bidAsset ?? copy.asset;
+  const formula = rankingFormula(asset);
+  const breaks = tieBreak(asset);
 
   return (
     <div>
@@ -82,14 +86,14 @@ export default async function VerifyRankingPage() {
         <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-bid">Public check</p>
         <h1 className="mt-3 text-4xl tracking-tight">Verify ranking</h1>
         <p className="mt-4 text-mute">
-          Rank is the active canonical {asset} bid in the current round. Reconstruct it from the contracts
-          and event logs. Do not trust the Longbid backend for ETHBid rank.
+          Rank is the active canonical {asset} bid in the current round. Reconstruct it from{" "}
+          {reconstructFrom(copy)}. Do not trust the Longbid backend for ETHBid rank.
         </p>
 
         <h2 className="mt-10 font-mono text-[11px] uppercase tracking-[0.22em] text-mute">Formula</h2>
-        <p className="mt-4 font-mono text-sm text-ink">{RANKING_FORMULA}</p>
+        <p className="mt-4 font-mono text-sm text-ink">{formula}</p>
         <ul className="mt-3 list-decimal space-y-2 pl-5 text-sm text-ink/90">
-          {TIE_BREAK.map((line) => (
+          {breaks.map((line) => (
             <li key={line}>{line}</li>
           ))}
         </ul>
@@ -139,9 +143,13 @@ export default async function VerifyRankingPage() {
           <p className="mt-4 text-sm text-mute">No round onchain yet.</p>
         )}
 
-        <h2 className="mt-10 font-mono text-[11px] uppercase tracking-[0.22em] text-mute">Subgraph</h2>
-        <p className="mt-4 break-all font-mono text-[12px] text-ink/90">{subgraph}</p>
-        <pre className="mt-4 overflow-x-auto border border-line bg-panel p-3 text-[11px] text-mute">{CURRENT_LEADERBOARD.trim()}</pre>
+        {indexUrl ? (
+          <>
+            <h2 className="mt-10 font-mono text-[11px] uppercase tracking-[0.22em] text-mute">Indexed query</h2>
+            <p className="mt-4 break-all font-mono text-[12px] text-ink/90">{indexUrl}</p>
+            <pre className="mt-4 overflow-x-auto border border-line bg-panel p-3 text-[11px] text-mute">{CURRENT_LEADERBOARD.trim()}</pre>
+          </>
+        ) : null}
 
         <h2 className="mt-10 font-mono text-[11px] uppercase tracking-[0.22em] text-mute">Indexed bids</h2>
         {graph.ok ? (

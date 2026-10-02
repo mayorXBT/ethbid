@@ -1,4 +1,6 @@
 import { Header } from "@/components/header";
+import { listingRankRule, reconstructFrom, settlementCopy } from "@/lib/ethbid/copy";
+import { rankingFormula, tieBreak } from "@/lib/ethbid/ranking-formula";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -6,6 +8,10 @@ export const metadata: Metadata = { title: "Rules" };
 export const dynamic = "force-dynamic";
 
 export default async function RulesPage() {
+  const copy = settlementCopy();
+  const formula = rankingFormula(copy.asset);
+  const breaks = tieBreak(copy.asset);
+
   return (
     <div>
       <Header />
@@ -13,23 +19,26 @@ export default async function RulesPage() {
         <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-bid">Protocol</p>
         <h1 className="mt-3 text-4xl tracking-tight">Rules</h1>
         <p className="mt-4 text-mute">
-          ETHBid is the onchain edition of Longbid. Rank is the active canonical USDG bid in the current
-          round. Anyone can reconstruct the board from the contracts and event logs.
+          ETHBid is the onchain edition of Longbid. Rank is the active canonical {copy.asset} bid in the current
+          round. Anyone can reconstruct the board from {reconstructFrom(copy)}.
         </p>
 
         <h2 className="mt-10 font-mono text-[11px] uppercase tracking-[0.22em] text-mute">How ranking works</h2>
         <ul className="mt-4 space-y-3 text-sm leading-6 text-ink/90">
-          <li>Score is the active canonical USDG bid in this round. Nothing else.</li>
-          <li>Tie-break: higher USDG, then the earlier bid in the round, then the stable project id.</li>
+          <li>Score is the active canonical {copy.asset} bid in this round. Nothing else.</li>
+          <li>Tie-break: {breaks[0].toLowerCase()}, then the earlier bid in the round, then the stable project id.</li>
           <li>Rounds are time-boxed. Early listings do not keep #1 forever.</li>
           <li>Only the verified owner wallet can bid, raise, or withdraw for a listing.</li>
           <li>The homepage reads contract events. Do not trust a backend cache for rank.</li>
         </ul>
+        <p className="mt-4 font-mono text-sm text-ink">{formula}</p>
 
         <h2 className="mt-10 font-mono text-[11px] uppercase tracking-[0.22em] text-mute">Money</h2>
         <ul className="mt-4 space-y-3 text-sm leading-6 text-ink/90">
-          <li>Bid Paxos USDG on Arbitrum Sepolia (or Robinhood Chain testnet). Approve, then placeBid.</li>
-          <li>RankingRound records the USDG that lands. That amount is the score.</li>
+          <li>
+            Bid {copy.asset} on {copy.label}. Approve, then placeBid.
+          </li>
+          <li>RankingRound records the {copy.asset} that lands. That amount is the score.</li>
           <li>No ETHBid token. No fiat checkout. No Crossmint or MoonPay on this board.</li>
         </ul>
 
@@ -43,7 +52,7 @@ export default async function RulesPage() {
         <ul className="mt-4 space-y-3 text-sm leading-6 text-ink/90">
           <li>Submit a product URL or an X @handle. Tracking params are stripped. GitHub and app stores key by path/id.</li>
           <li>Crypto products only: protocols, wallets, DEXs, L1s/L2s, infra, AI+crypto, stables, analytics.</li>
-          <li>The listing is the product URL. Rank is the subgraph total, not clicks.</li>
+          <li>{listingRankRule(copy)}</li>
         </ul>
 
         <p className="mt-12 font-mono text-sm text-bid">Rank is the onchain bid.</p>

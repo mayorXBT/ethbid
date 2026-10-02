@@ -1,3 +1,5 @@
+import type { BidAsset } from "./ethbid/chains";
+import { settlementCopy } from "./ethbid/copy";
 import { MIN_NEW_BID_USD, TOP_SPOT_PREMIUM_USD, clampBid } from "./money";
 import type { Listing, RankedListing } from "./types";
 
@@ -59,6 +61,7 @@ export function quoteBid(input: {
   listings: Listing[];
   existing?: Listing | null;
   requestedUsd: number;
+  asset?: BidAsset;
 }): {
   ok: true;
   kind: "new" | "raise";
@@ -70,12 +73,13 @@ export function quoteBid(input: {
   error: string;
 } {
   const requested = clampBid(input.requestedUsd);
+  const asset = input.asset ?? settlementCopy().asset;
 
   if (input.existing) {
     if (requested <= input.existing.bidUsd) {
       return {
         ok: false,
-        error: `Raise above your current ${input.existing.bidUsd} USDC bid.`,
+        error: `Raise above your current ${input.existing.bidUsd} ${asset} bid.`,
       };
     }
     const others = input.listings.filter((l) => l.id !== input.existing!.id);
@@ -91,7 +95,7 @@ export function quoteBid(input: {
   if (requested < MIN_NEW_BID_USD) {
     return {
       ok: false,
-      error: `New spots start at ${MIN_NEW_BID_USD} USDC.`,
+      error: `New spots start at ${MIN_NEW_BID_USD} ${asset}.`,
     };
   }
 
