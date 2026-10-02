@@ -1,5 +1,6 @@
 "use client";
 
+import { NetworkSwitch } from "@/components/network-switch";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 
 export function WalletButton() {
@@ -10,14 +11,17 @@ export function WalletButton() {
 
   if (isConnected && address) {
     return (
-      <button
-        type="button"
-        aria-label="Disconnect wallet"
-        onClick={() => disconnect()}
-        className="inline-flex h-8 items-center border border-line px-2 text-[11px] uppercase tracking-[0.14em] text-muted-foreground hover:border-bid hover:text-bid"
-      >
-        {address.slice(0, 6)}…{address.slice(-4)}
-      </button>
+      <span className="inline-flex items-center gap-2">
+        <NetworkSwitch />
+        <button
+          type="button"
+          aria-label="Disconnect wallet"
+          onClick={() => disconnect()}
+          className="inline-flex h-8 items-center border border-line px-2 text-[11px] uppercase tracking-[0.14em] text-muted-foreground hover:border-bid hover:text-bid"
+        >
+          {address.slice(0, 6)}…{address.slice(-4)}
+        </button>
+      </span>
     );
   }
 

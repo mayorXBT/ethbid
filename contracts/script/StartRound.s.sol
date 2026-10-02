@@ -10,9 +10,9 @@ import {RankingRound} from "../src/RankingRound.sol";
 /// Optional: ETHBID_ROUND_DURATION (seconds, default 7 days)
 ///
 /// Simulate:
-///   forge script script/StartRound.s.sol --rpc-url mainnet
+///   forge script script/StartRound.s.sol --rpc-url arbitrum_sepolia
 /// Broadcast:
-///   forge script script/StartRound.s.sol --rpc-url mainnet --broadcast
+///   forge script script/StartRound.s.sol --rpc-url arbitrum_sepolia --broadcast
 contract StartRound is Script {
     function run() external {
         uint256 pk = vm.envUint("PRIVATE_KEY");
