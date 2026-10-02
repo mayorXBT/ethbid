@@ -2,9 +2,11 @@ import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { MobileNav } from "@/components/mobile-nav";
 import { WalletButton } from "@/components/wallet-button";
+import { settlementCopy } from "@/lib/ethbid/copy";
 import { getStats } from "@/lib/store";
 
 export async function Header() {
+  const copy = settlementCopy();
   const stats = await getStats().catch(() => ({
     online: 0,
     visitors: 0,
@@ -16,11 +18,21 @@ export async function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background/90 backdrop-blur">
       <div className="mx-auto grid max-w-5xl grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3">
-        <Link href="/" className="flex min-w-0 items-center gap-2 justify-self-start">
+        <Link href="/" className="flex min-w-0 items-center gap-1.5 justify-self-start sm:gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-bid.png" alt="" width={32} height={32} className="h-7 w-7 shrink-0 sm:h-8 sm:w-8" />
-          <span className="truncate text-sm font-semibold tracking-tight text-foreground sm:text-base">
-            ETHBid
+          <span className="flex min-w-0 items-center gap-1.5">
+            <span className="truncate text-sm font-semibold tracking-tight text-foreground sm:text-base">
+              ETHBid
+            </span>
+            {copy.testnetBadge ? (
+              <span
+                title={copy.testnetBadge}
+                className="max-w-[6.75rem] truncate rounded-[2px] border border-bid/45 px-1 py-px text-[8px] uppercase leading-tight tracking-[0.08em] text-bid sm:max-w-none sm:text-[10px] sm:tracking-[0.12em]"
+              >
+                {copy.testnetBadge}
+              </span>
+            ) : null}
           </span>
         </Link>
 

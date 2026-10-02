@@ -1,7 +1,13 @@
-export const RANKING_FORMULA = "score = active canonical USDG bid";
+import type { BidAsset } from "./chains";
 
-export const TIE_BREAK = [
-  "Higher active USDG bid",
-  "Earlier transaction in the current round",
-  "Stable project id",
-] as const;
+export function rankingFormula(asset: BidAsset): string {
+  return `score = active canonical ${asset} bid`;
+}
+
+export function tieBreak(asset: BidAsset): readonly string[] {
+  return [
+    `Higher active ${asset} bid`,
+    "Earlier transaction in the current round",
+    "Stable project id",
+  ];
+}

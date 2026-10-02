@@ -61,9 +61,19 @@ describe("quoteBid", () => {
   ];
 
   it("rejects new bids under the $5 floor", () => {
-    const q = quoteBid({ listings: board, requestedUsd: 1 });
+    const q = quoteBid({ listings: board, requestedUsd: 1, asset: "USDG" });
     expect(q.ok).toBe(false);
-    if (!q.ok) expect(q.error).toContain(String(MIN_NEW_BID_USD));
+    if (!q.ok) {
+      expect(q.error).toContain(String(MIN_NEW_BID_USD));
+      expect(q.error).toContain("USDG");
+      expect(q.error).not.toContain("USDC");
+    }
+  });
+
+  it("names USDC when quoting on Ethereum", () => {
+    const q = quoteBid({ listings: board, requestedUsd: 1, asset: "USDC" });
+    expect(q.ok).toBe(false);
+    if (!q.ok) expect(q.error).toContain("USDC");
   });
 
   it("lets a small bid sit at the bottom", () => {

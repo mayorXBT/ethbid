@@ -77,6 +77,5 @@ subgraph/node_modules/
 .env*
 !.env.example
 
-# folder-copy leftovers from local duplication
-*Copy*
-* Copy*
+# Finder/Explorer duplicate folders
+* Copy/

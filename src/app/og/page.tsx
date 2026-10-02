@@ -1,3 +1,5 @@
+import { settlementCopy } from "@/lib/ethbid/copy";
+import { MIN_NEW_BID_USD } from "@/lib/money";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -6,6 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default function OgCardPage() {
+  const copy = settlementCopy();
   return (
     <div className="flex min-h-screen items-center justify-center bg-black p-6">
       <div
@@ -29,7 +32,9 @@ export default function OgCardPage() {
               <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#3dff9a]" />
               <span className="font-medium text-[#3dff9a]">Live</span>
               <span className="h-4 w-px bg-[#1c2129]" />
-              <span className="text-[#8b93a1]">Uniswap + The Graph</span>
+              <span className="text-[#8b93a1]">
+                {copy.label} · {copy.asset}
+              </span>
             </div>
           </div>
 
@@ -41,7 +46,9 @@ export default function OgCardPage() {
           </div>
 
           <div className="flex items-center justify-end gap-5">
-            <p className="text-[18px] text-[#8b93a1]">Pay more. Rank higher. Floor $5 USDG.</p>
+            <p className="text-[18px] text-[#8b93a1]">
+              Pay more. Rank higher. Floor ${MIN_NEW_BID_USD} {copy.asset}.
+            </p>
             <span className="bg-[#3dff9a] px-6 py-3 text-[18px] font-semibold uppercase tracking-[0.14em] text-[#07080a]">
               Place bid
             </span>

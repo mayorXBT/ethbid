@@ -24,8 +24,12 @@ export function formatUsd(amount: number, opts?: { compact?: boolean }): string 
   }).format(amount);
 }
 
+export function formatBid(amount: number, asset: string): string {
+  return `${formatUsd(amount)} ${asset}`;
+}
+
 export function formatUsdc(amount: number): string {
-  return `${formatUsd(amount)} USDC`;
+  return formatBid(amount, "USDC");
 }
 
 export function clampBid(amount: number): number {

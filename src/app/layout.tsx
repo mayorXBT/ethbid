@@ -3,6 +3,7 @@ import { JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import { Presence } from "@/components/presence";
 import { Web3Provider } from "@/components/web3-provider";
+import { shareDescription, siteDescription } from "@/lib/ethbid/copy";
 import "./globals.css";
 
 const jetbrains = JetBrains_Mono({
@@ -12,27 +13,27 @@ const jetbrains = JetBrains_Mono({
   display: "swap",
 });
 
+const description = siteDescription();
+const social = shareDescription();
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://ethbid.longbid.lol"),
   title: {
     default: "ETHBid. Rank is the onchain bid.",
     template: "%s · ETHBid",
   },
-  description:
-    "Onchain discovery market for crypto products. Verify ownership. Bid Paxos USDG on Arbitrum. Rank anyone can reconstruct from the contracts.",
+  description,
   openGraph: {
     title: "ETHBid. Rank is the onchain bid.",
-    description: "Verify. Bid. Rank. Reconstruct it from contracts and The Graph.",
+    description: social,
     type: "website",
     siteName: "ETHBid",
     url: "/",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "ETHBid. Rank is the onchain bid." }],
   },
   twitter: {
     card: "summary_large_image",
     title: "ETHBid. Rank is the onchain bid.",
-    description: "Verify. Bid. Rank. Reconstruct it from contracts and The Graph.",
-    images: ["/og.png"],
+    description: social,
   },
   icons: {
     icon: [{ url: "/favicon.png", type: "image/png" }, { url: "/logo-bid.png", type: "image/png" }],

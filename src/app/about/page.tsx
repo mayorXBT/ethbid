@@ -1,4 +1,5 @@
 import { Header } from "@/components/header";
+import { reconstructFrom, settlementCopy, thirdPartyRankCopy } from "@/lib/ethbid/copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -6,6 +7,9 @@ export const metadata: Metadata = { title: "About" };
 export const dynamic = "force-dynamic";
 
 export default async function AboutPage() {
+  const copy = settlementCopy();
+  const explorerHost = new URL(copy.explorer).host;
+
   return (
     <div>
       <Header />
@@ -14,20 +18,25 @@ export default async function AboutPage() {
         <h1 className="mt-3 text-4xl tracking-tight">About</h1>
         <p className="mt-4 text-mute">
           Crypto Twitter ranks products with vibes and recaps. ETHBid is Longbid rebuilt so the rank is
-          onchain. Verify you control the product. Bid Paxos USDG on Arbitrum. Anyone can rebuild the
-          board from the contract events.
+          onchain. Verify you control the product. Bid {copy.asset} on {copy.label}. Anyone can rebuild the
+          board from {reconstructFrom(copy)}.
         </p>
         <p className="mt-4 text-mute">
           No algorithm. No featured slot. If you want #1, you pay for it. If someone wants it more, they
-          pay more. A third party can query the subgraph and get the same order.
+          pay more. {thirdPartyRankCopy(copy)}
+        </p>
+        <p className="mt-4 text-mute">
+          ENS identity is resolved on Ethereum mainnet. Settlement and rank live on {copy.label}.
         </p>
 
         <h2 className="mt-10 font-mono text-[11px] uppercase tracking-[0.22em] text-mute">How it works</h2>
         <ol className="mt-4 list-decimal space-y-3 pl-5 text-sm leading-6 text-ink/90">
           <li>Connect the wallet that controls your ENS name or verified domain.</li>
           <li>Submit the product. Ownership writes onchain.</li>
-          <li>Bid USDG on Arbitrum. Rank is the active bid.</li>
-          <li>Open Verify and reconstruct the same ranking from Arbiscan events.</li>
+          <li>
+            Bid {copy.asset} on {copy.label}. Rank is the active bid.
+          </li>
+          <li>Open Verify and reconstruct the same ranking from {explorerHost} events.</li>
         </ol>
 
         <h2 className="mt-10 font-mono text-[11px] uppercase tracking-[0.22em] text-mute">Counters</h2>

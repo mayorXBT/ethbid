@@ -32,6 +32,7 @@ const nextConfig: NextConfig = {
       process.env.NEXT_PUBLIC_ETHBID_USDC || "0xFFC95faa3d63Cde504a05B567C600B78C0b41892",
     NEXT_PUBLIC_ETHBID_WETH:
       process.env.NEXT_PUBLIC_ETHBID_WETH || "0x980B62Da83eFF3D4576C647993b0c1D7faf17c73",
+    // Production ethbid (chain 1) must set NEXT_PUBLIC_ETHBID_START_BLOCK. Fallback is Arbitrum Sepolia.
     NEXT_PUBLIC_ETHBID_START_BLOCK: process.env.NEXT_PUBLIC_ETHBID_START_BLOCK || "314937339",
   },
 };
