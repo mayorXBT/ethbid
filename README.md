@@ -1,12 +1,24 @@
 # ETHBid
 
-Onchain discovery market for crypto products. Prove you own a site. Bid Paxos USDG. Rank is the live bid, readable from the contracts.
+Onchain discovery market for crypto products. Prove you own a site. Bid Paxos USDG. Rank is the live bid, readable from the contracts. Bid more, rank higher, get more exposure.
 
 **Demo (Arbitrum Open House):** [https://arb.longbid.lol](https://arb.longbid.lol)
 
 Arbitrum Sepolia, test USDG. Connect a wallet, paste a product URL, bid. Rank 1 is the highest live bid.
 
 Ethereum mainnet edition: [https://ethbid.longbid.lol](https://ethbid.longbid.lol)
+
+## What ranking gets you
+
+The homepage is the discovery surface. Visitors land on a public ranked board.
+
+- **Exposure.** Higher bid means a higher row. #1 is the first product on the page. Top three get a larger card, bigger type, and a louder bid amount.
+- **Clicks.** Each row is your favicon, product name, category, and live USDG bid. `see details` sends people to your real URL. The row also shows click count.
+- **Distribution.** Listings sit in a category (L1s and L2s, exchanges, DeFi, wallets, and the rest). New bids land in Latest bids, so a rank change is visible without a press blast.
+- **Proof.** Rank is the onchain bid. Anyone can rebuild the same order from contract events. The score is public USDG.
+- **Control.** Only the registered owner can raise or withdraw. An outbid refunds the previous bidder. Withdraw clears the row.
+
+If you want #1, you pay for it in USDG. If someone wants it more, they pay more.
 
 ## Run locally
 
