@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { CATEGORIES, isCategory } from "@/lib/categories";
+import { NetworkSwitch } from "@/components/network-switch";
 import { ethbidConfigured, ethbidContracts } from "@/lib/ethbid/config";
+import { networkOrDefault } from "@/lib/ethbid/chains";
 import { plainEthbidError } from "@/lib/ethbid/errors";
 import { submitEthbidBid, type EthbidStep } from "@/lib/ethbid/submit";
 import { MAX_BID_USD, MIN_NEW_BID_USD, parseUsd } from "@/lib/money";
@@ -26,6 +28,8 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
   const [target, setTarget] = useState("");
   const onchain = ethbidConfigured();
   const biddingOpen = onchain;
+  const contractsNow = ethbidContracts();
+  const network = networkOrDefault(contractsNow?.chainId ?? 421614);
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
@@ -71,9 +75,12 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
           targetUsdc: bidUsd,
         },
         (step) => {
+          const asset = contracts.bidAsset;
           const copy = {
             register: "Registering the product…",
-            swap: "Swapping to USDC…",
+            approve: `Approving ${asset}…`,
+            bid: `Placing ${asset} bid…`,
+            swap: `Swapping to ${asset}…`,
             confirmed: "Confirmed.",
           } satisfies Record<EthbidStep, string>;
           setStatus(copy[step]);
@@ -95,8 +102,8 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
           Rank is the bid.
         </h1>
         <p className="mt-3 max-w-lg text-sm text-muted-foreground">
-          Connect a wallet. Bid through Uniswap into canonical USDC.
-          Rank is public on The Graph. Floor ${min} USDC.
+          Connect a wallet on {network.label}. Bid {network.bidAsset} onchain.
+          Rank is public from the contracts. Floor ${min} {network.bidAsset}.
         </p>
       </div>
 
@@ -152,7 +159,7 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
                   name="amount"
                   inputMode="numeric"
                   autoComplete="off"
-                  aria-label="Bid amount in USDC"
+                  aria-label={`Bid amount in ${network.bidAsset}`}
                   value={draft}
                   onChange={(e) => setDraft(e.target.value.replace(/[^\d]/g, ""))}
                   onBlur={commitDraft}
@@ -195,7 +202,34 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
         <p className="text-xs text-bid">{status}</p>
       ) : (
         <p className="text-[11px] text-muted-foreground">
-          Connect a wallet. Bid in ETH. Uniswap converts to USDC onchain.
+          <NetworkSwitch />
+          {network.faucetEth ? (
+            <>
+              {" "}
+              ETH faucet:{" "}
+              <a className="underline hover:text-bid" href={network.faucetEth} target="_blank" rel="noreferrer">
+                {network.faucetEth.replace(/^https:\/\//, "")}
+              </a>
+            </>
+          ) : null}
+          {network.faucetStable ? (
+            <>
+              {" "}
+              {network.bidAsset} faucet:{" "}
+              <a className="underline hover:text-bid" href={network.faucetStable} target="_blank" rel="noreferrer">
+                faucet.paxos.com
+              </a>
+            </>
+          ) : null}
+          {network.faucetCircle ? (
+            <>
+              {" "}
+              Circle:{" "}
+              <a className="underline hover:text-bid" href={network.faucetCircle} target="_blank" rel="noreferrer">
+                faucet.circle.com
+              </a>
+            </>
+          ) : null}
         </p>
       )}
     </form>

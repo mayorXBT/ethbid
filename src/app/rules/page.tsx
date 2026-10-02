@@ -13,23 +13,23 @@ export default async function RulesPage() {
         <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-bid">Protocol</p>
         <h1 className="mt-3 text-4xl tracking-tight">Rules</h1>
         <p className="mt-4 text-mute">
-          ETHBid is the onchain edition of Longbid. Rank is the active canonical USDC bid in the current
-          round. Anyone can reconstruct the board from the contracts and The Graph.
+          ETHBid is the onchain edition of Longbid. Rank is the active canonical USDG bid in the current
+          round. Anyone can reconstruct the board from the contracts and event logs.
         </p>
 
         <h2 className="mt-10 font-mono text-[11px] uppercase tracking-[0.22em] text-mute">How ranking works</h2>
         <ul className="mt-4 space-y-3 text-sm leading-6 text-ink/90">
-          <li>Score is the active canonical USDC bid in this round. Nothing else.</li>
-          <li>Tie-break: higher USDC, then the earlier bid in the round, then the stable project id.</li>
+          <li>Score is the active canonical USDG bid in this round. Nothing else.</li>
+          <li>Tie-break: higher USDG, then the earlier bid in the round, then the stable project id.</li>
           <li>Rounds are time-boxed. Early listings do not keep #1 forever.</li>
           <li>Only the verified owner wallet can bid, raise, or withdraw for a listing.</li>
-          <li>The homepage reads The Graph. Do not trust a backend cache for rank.</li>
+          <li>The homepage reads contract events. Do not trust a backend cache for rank.</li>
         </ul>
 
         <h2 className="mt-10 font-mono text-[11px] uppercase tracking-[0.22em] text-mute">Money</h2>
         <ul className="mt-4 space-y-3 text-sm leading-6 text-ink/90">
-          <li>Bid with ETH or a supported ERC-20. Uniswap V3 converts it to canonical USDC on Ethereum mainnet.</li>
-          <li>RankingRound records the USDC that lands. That amount is the score.</li>
+          <li>Bid Paxos USDG on Arbitrum Sepolia (or Robinhood Chain testnet). Approve, then placeBid.</li>
+          <li>RankingRound records the USDG that lands. That amount is the score.</li>
           <li>No ETHBid token. No fiat checkout. No Crossmint or MoonPay on this board.</li>
         </ul>
 
