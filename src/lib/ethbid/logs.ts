@@ -38,9 +38,10 @@ function listingFromLog(bid: LiveBid, meta: ProjectMeta | undefined): Listing {
   let host = "";
   try {
     const parsed = new URL(uri);
-    url = parsed.toString();
     host = parsed.hostname.replace(/^www\./i, "");
     name = host || name;
+    const path = parsed.pathname.replace(/\/+$/, "");
+    url = `${parsed.origin}${path}`;
   } catch {
     if (uri) name = uri;
     url = "https://ethbid.longbid.lol";
@@ -56,7 +57,7 @@ function listingFromLog(bid: LiveBid, meta: ProjectMeta | undefined): Listing {
     description: "",
     faviconUrl: siteFaviconUrl(host) ?? addressAvatarUrl(owner),
     ogImageUrl: null,
-    category: categoryFromUrl(url) ?? "infra",
+    category: categoryFromUrl(uri) ?? "infra",
     verification: "None",
     owner,
     bidUsd: usdcToUsd(bid.total.toString()),
@@ -188,16 +189,21 @@ export async function getLogsBoard(contracts: EthbidContracts): Promise<BoardSna
 
   const listings = timed.map((bid) => listingFromLog(bid, projects.get(bid.projectId.toLowerCase())));
   const ranked = rankListings(listings);
-  const rankById = new Map(ranked.map((row) => [row.id, row.rank]));
+  const rankById = new Map(ranked.map((row) => [row.id.toLowerCase(), row.rank]));
+  const liveIds = new Set(ranked.map((row) => row.id.toLowerCase()));
   const activity: ActivityItem[] = [];
-  const recent = activitySource.sort((a, b) => Number(b.block - a.block)).slice(0, 20);
+  const recent = activitySource
+    .filter((event) => liveIds.has(event.bid.projectId.toLowerCase()))
+    .sort((a, b) => Number(b.block - a.block))
+    .slice(0, 20);
   for (const event of recent) {
     const createdAt = unixToIso((await blockTime(event.block)).toString());
+    const id = event.bid.projectId.toLowerCase();
     activity.push({
       id: event.tx,
       listingId: event.bid.projectId,
-      name: ranked.find((row) => row.id === event.bid.projectId)?.name ?? `${event.bid.projectId.slice(0, 10)}…`,
-      rank: rankById.get(event.bid.projectId) ?? 0,
+      name: ranked.find((row) => row.id.toLowerCase() === id)?.name ?? `${event.bid.projectId.slice(0, 10)}…`,
+      rank: rankById.get(id) ?? 0,
       bidUsd: usdcToUsd(event.amount.toString()),
       kind: event.kind,
       createdAt,
