@@ -52,7 +52,27 @@ scripts/.api-keys.err
 .data/
 .tmp-qa/
 .tmp-verify/
-.cursor/skills/verify-longbid/artifacts/
+
+# editor / agent local
+.claude/
+.cursor/
+.grok/
+.gstack/
+.worktrees/
+AGENTS.md
+CLAUDE.md
+Agents.md
+Claude.md
+
+# local session notes
+BEFORE.md
+ETHBID-PLAN.md
+ETHBID.md
+FEEDBACK.md
+dev.md
+
+# local media
+videos/
 
 # vercel
 .vercel
@@ -60,7 +80,6 @@ scripts/.api-keys.err
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-.gstack/
 
 # foundry
 contracts/out/
