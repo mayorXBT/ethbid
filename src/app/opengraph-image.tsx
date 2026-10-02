@@ -49,25 +49,26 @@ export default async function OpenGraphImage() {
             <div style={{ width: 10, height: 10, borderRadius: 999, background: "#3dff9a" }} />
             <div style={{ color: "#3dff9a", fontWeight: 500 }}>Live</div>
             <div style={{ width: 1, height: 16, background: "#1c2129" }} />
-            <div style={{ color: "#8b93a1" }}>
-              {copy.label} · {copy.asset}
+            <div style={{ display: "flex", color: "#8b93a1" }}>
+              {`${copy.label} · ${copy.asset}`}
             </div>
           </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ fontSize: 84, fontWeight: 600, lineHeight: 0.95, letterSpacing: -2 }}>
+          <div style={{ display: "flex", fontSize: 84, fontWeight: 600, lineHeight: 0.95, letterSpacing: -2 }}>
             Rank is the bid.
           </div>
-          <div style={{ marginTop: 24, fontSize: 28, color: "#8b93a1" }}>Bid. Rank. Repeat.</div>
+          <div style={{ display: "flex", marginTop: 24, fontSize: 28, color: "#8b93a1" }}>Bid. Rank. Repeat.</div>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 20 }}>
-          <div style={{ fontSize: 18, color: "#8b93a1" }}>
-            Pay more. Rank higher. Floor ${MIN_NEW_BID_USD} {copy.asset}.
+          <div style={{ display: "flex", fontSize: 18, color: "#8b93a1" }}>
+            {`Pay more. Rank higher. Floor $${MIN_NEW_BID_USD} ${copy.asset}.`}
           </div>
           <div
             style={{
+              display: "flex",
               background: "#3dff9a",
               color: "#07080a",
               fontSize: 18,
