@@ -60,6 +60,7 @@ contract RankingRound {
 
     function setTreasury(address next) external {
         if (msg.sender != admin) revert NotAdmin();
+        if (next == address(0)) revert ZeroTreasury();
         treasury = next;
         emit TreasurySet(next);
     }
