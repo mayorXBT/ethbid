@@ -12,7 +12,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
   if (!isOutboundListingId(id)) return NextResponse.redirect(new URL("/", origin));
   const listing = (await getListingById(id)) ?? (await listingFromOnchainBoard(id));
   const target = listing ? publicHttpUrl(listing.url) : null;
-  if (!target) return NextResponse.redirect(new URL("/", origin));
+  if (!listing || !target) return NextResponse.redirect(new URL("/", origin));
   await incrementClicks(listing.id);
   return NextResponse.redirect(target);
 }
