@@ -2,7 +2,7 @@ import { addressAvatarUrl } from "../avatar";
 import { siteFaviconUrl } from "../site-preview";
 import type { ActivityItem, BoardSnapshot, Listing } from "../types";
 import { rankListings, topBidUsd } from "../ranking";
-import { categoryFromUrl } from "../urls";
+import { categoryFromUrl, displayHost, isReservedDemoHost } from "../urls";
 import { graphQuery } from "./client";
 import { ACTIVE_ROUND, CURRENT_LEADERBOARD, RECENT_BID_ACTIVITY } from "./queries";
 
@@ -163,7 +163,9 @@ export async function getGraphBoard(): Promise<BoardSnapshot> {
     graphQuery<{ bids: unknown }>(CURRENT_LEADERBOARD, { roundId }),
     graphQuery<{ bidEvents: unknown }>(RECENT_BID_ACTIVITY),
   ]);
-  const listings = parseGraphBids(board.bids).map(listingFromGraphBid);
+  const listings = parseGraphBids(board.bids)
+    .map(listingFromGraphBid)
+    .filter((row) => !isReservedDemoHost(displayHost(row.url)));
   const ranked = rankListings(listings);
   const rankById = new Map(ranked.map((row) => [row.id, row.rank]));
   const activity: ActivityItem[] = parseGraphEvents(recent.bidEvents)

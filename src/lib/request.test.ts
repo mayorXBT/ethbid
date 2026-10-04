@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { asJsonObject, publicHttpUrl, stringField } from "./request";
+import { asJsonObject, isOutboundListingId, publicHttpUrl, stringField } from "./request";
 
 describe("request guards", () => {
   it("accepts a plain object and rejects arrays", () => {
@@ -19,6 +19,13 @@ describe("request guards", () => {
     expect(publicHttpUrl("https://example.xyz/app")).toBe("https://example.xyz/app");
     expect(publicHttpUrl("javascript:alert(1)")).toBeNull();
     expect(publicHttpUrl("https://user:pass@example.xyz")).toBeNull();
+  });
+
+  it("accepts UUID and 32-byte project ids for outbound clicks", () => {
+    expect(isOutboundListingId("3b12f1c8-8c2a-4d1e-9b3f-2a7c8d9e0f11")).toBe(true);
+    expect(isOutboundListingId("0x" + "ab".repeat(32))).toBe(true);
+    expect(isOutboundListingId("0x1234")).toBe(false);
+    expect(isOutboundListingId("not-an-id")).toBe(false);
   });
 });
 

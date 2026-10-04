@@ -3,7 +3,7 @@ import { addressAvatarUrl } from "../avatar";
 import { rankListings, topBidUsd } from "../ranking";
 import { siteFaviconUrl } from "../site-preview";
 import type { ActivityItem, BoardSnapshot, Listing } from "../types";
-import { categoryFromUrl } from "../urls";
+import { categoryFromUrl, displayHost, isReservedDemoHost } from "../urls";
 import { projectRegistryAbi, rankingRoundAbi } from "./abi";
 import { networkOrDefault } from "./chains";
 import type { EthbidContracts } from "./config";
@@ -187,7 +187,9 @@ export async function getLogsBoard(contracts: EthbidContracts): Promise<BoardSna
     timed.push({ ...bid, firstAt: await blockTime(bid.firstAt) });
   }
 
-  const listings = timed.map((bid) => listingFromLog(bid, projects.get(bid.projectId.toLowerCase())));
+  const listings = timed
+    .map((bid) => listingFromLog(bid, projects.get(bid.projectId.toLowerCase())))
+    .filter((row) => !isReservedDemoHost(displayHost(row.url)));
   const ranked = rankListings(listings);
   const rankById = new Map(ranked.map((row) => [row.id.toLowerCase(), row.rank]));
   const liveIds = new Set(ranked.map((row) => row.id.toLowerCase()));

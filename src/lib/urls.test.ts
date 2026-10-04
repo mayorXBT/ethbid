@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { categoryFromUrl, classifyTarget, normalizeTarget, withCategory } from "./urls";
+import { categoryFromUrl, classifyTarget, isReservedDemoHost, normalizeTarget, withCategory } from "./urls";
 
 describe("normalizeTarget", () => {
   it("accepts @handles", () => {
@@ -30,6 +30,16 @@ describe("normalizeTarget", () => {
 
   it("rejects oversized targets", () => {
     expect(normalizeTarget(`https://${"a".repeat(2_050)}.com`)).toBeNull();
+  });
+});
+
+describe("isReservedDemoHost", () => {
+  it("hides RFC reserved example hosts used in capture demos", () => {
+    expect(isReservedDemoHost("beta.open-house-demo.example")).toBe(true);
+    expect(isReservedDemoHost("alpha.open-house-demo.example")).toBe(true);
+    expect(isReservedDemoHost("www.example")).toBe(true);
+    expect(isReservedDemoHost("arbitrum.io")).toBe(false);
+    expect(isReservedDemoHost("robinhood.com")).toBe(false);
   });
 });
 

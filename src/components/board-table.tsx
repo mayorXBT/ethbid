@@ -145,7 +145,7 @@ export function BoardTable({ listings }: { listings: RankedListing[] }) {
                       <span className="text-heat">{listing.clickCount.toLocaleString()} clicks</span>
                       <span className="text-mute/50">·</span>
                       <Link
-                        href={listing.id.startsWith("0x") ? listing.url : `/go/${listing.id}`}
+                        href={`/go/${listing.id}`}
                         className="text-bid underline-offset-2 hover:underline"
                       >
                         see details
