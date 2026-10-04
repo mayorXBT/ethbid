@@ -34,5 +34,8 @@ export function plainEthbidError(err: unknown): string {
   if (lower.includes("need a real url")) {
     return "Need a real URL or @handle.";
   }
+  if (lower.includes("timed out") || lower.includes("timeout")) {
+    return "The wallet or network stalled. Confirm the popup if it is open, then retry.";
+  }
   return raw.slice(0, 240) || "Something failed. Retry.";
 }

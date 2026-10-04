@@ -1,5 +1,5 @@
 import type { Address, PublicClient, WalletClient } from "viem";
-import { parseEther } from "viem";
+import { parseEther, zeroAddress } from "viem";
 import { quoteTokenToUsdc } from "@/lib/uniswap/quote-usdc";
 import { bidRouterAbi, erc20Abi, projectRegistryAbi, rankingRoundAbi } from "./abi";
 import { usesDirectStableBid } from "./chains";
@@ -21,6 +21,52 @@ export function bidUnitsFromUsd(usd: number): bigint {
   return BigInt(usd) * 1_000_000n;
 }
 
+const RECEIPT_TIMEOUT_MS = 120_000;
+
+export function isMissingProject(err: unknown): boolean {
+  const text = err instanceof Error ? `${err.name} ${err.message}` : String(err);
+  if (/UnknownProject/i.test(text)) return true;
+  return /getProject/i.test(text) && /revert/i.test(text);
+}
+
+async function sendWrite(
+  publicClient: PublicClient,
+  walletClient: WalletClient,
+  wallet: Address,
+  request: {
+    address: Address;
+    abi: readonly unknown[];
+    functionName: string;
+    args?: readonly unknown[];
+    value?: bigint;
+  },
+): Promise<`0x${string}`> {
+  const simulated = await publicClient.simulateContract({
+    account: wallet,
+    ...request,
+  } as Parameters<PublicClient["simulateContract"]>[0]);
+  const gas =
+    simulated.request.gas ??
+    (await publicClient.estimateContractGas({
+      account: wallet,
+      ...request,
+    } as Parameters<PublicClient["estimateContractGas"]>[0]));
+  const hash = await walletClient.writeContract({
+    ...simulated.request,
+    account: wallet,
+    chain: publicClient.chain,
+    gas: (gas * 120n) / 100n,
+  });
+  const receipt = await publicClient.waitForTransactionReceipt({
+    hash,
+    timeout: RECEIPT_TIMEOUT_MS,
+  });
+  if (receipt.status !== "success") {
+    throw new Error("Transaction reverted.");
+  }
+  return hash;
+}
+
 async function ensureRegistered(
   contracts: EthbidContracts,
   wallet: Address,
@@ -30,26 +76,26 @@ async function ensureRegistered(
   onStep?: (step: EthbidStep) => void,
 ): Promise<`0x${string}`> {
   const projectId = projectIdFromCanonical(input.canonicalKey);
-  const existing = await publicClient
-    .readContract({
+  let existing: { owner: Address } | null = null;
+  try {
+    existing = await publicClient.readContract({
       address: contracts.registry,
       abi: projectRegistryAbi,
       functionName: "getProject",
       args: [projectId],
-    })
-    .catch(() => null);
+    });
+  } catch (err) {
+    if (!isMissingProject(err)) throw err;
+  }
 
-  if (!existing) {
+  if (!existing || existing.owner.toLowerCase() === zeroAddress) {
     onStep?.("register");
-    const hash = await walletClient.writeContract({
-      account: wallet,
-      chain: publicClient.chain,
+    await sendWrite(publicClient, walletClient, wallet, {
       address: contracts.registry,
       abi: projectRegistryAbi,
       functionName: "register",
       args: [projectId, input.url],
     });
-    await publicClient.waitForTransactionReceipt({ hash });
     return projectId;
   }
   if (existing.owner.toLowerCase() !== wallet.toLowerCase()) {
@@ -88,28 +134,21 @@ async function placeDirectStableBid(
   });
   if (allowance < amount) {
     onStep?.("approve");
-    const approveHash = await walletClient.writeContract({
-      account: wallet,
-      chain: publicClient.chain,
+    await sendWrite(publicClient, walletClient, wallet, {
       address: contracts.usdc,
       abi: erc20Abi,
       functionName: "approve",
       args: [contracts.ranking, amount],
     });
-    await publicClient.waitForTransactionReceipt({ hash: approveHash });
   }
 
   onStep?.("bid");
-  const hash = await walletClient.writeContract({
-    account: wallet,
-    chain: publicClient.chain,
+  return sendWrite(publicClient, walletClient, wallet, {
     address: contracts.ranking,
     abi: rankingRoundAbi,
     functionName: "placeBid",
     args: [projectId, amount],
   });
-  await publicClient.waitForTransactionReceipt({ hash });
-  return hash;
 }
 
 async function placeEthSwapBid(
@@ -136,17 +175,13 @@ async function placeEthSwapBid(
   }
   onStep?.("swap");
   const deadline = BigInt(Math.floor(Date.now() / 1000) + 20 * 60);
-  const hash = await walletClient.writeContract({
-    account: wallet,
-    chain: publicClient.chain,
+  return sendWrite(publicClient, walletClient, wallet, {
     address: contracts.router,
     abi: bidRouterAbi,
     functionName: "bidWithEth",
     args: [projectId, fee, minOut, deadline],
     value: ethIn,
   });
-  await publicClient.waitForTransactionReceipt({ hash });
-  return hash;
 }
 
 export async function submitEthbidBid(
