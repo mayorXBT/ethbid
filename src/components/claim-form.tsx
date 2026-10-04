@@ -14,7 +14,7 @@ import { MAX_BID_USD, MIN_NEW_BID_USD, parseUsd } from "@/lib/money";
 import { normalizeTarget, withCategory } from "@/lib/urls";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { useAccount, usePublicClient, useWalletClient } from "wagmi";
+import { useAccount, useChainId, usePublicClient, useWalletClient } from "wagmi";
 
 export function ClaimForm({ defaultBid }: { defaultBid: number }) {
   const params = useSearchParams();
@@ -32,9 +32,11 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
   const onchain = ethbidConfigured();
   const biddingOpen = onchain;
   const copy = settlementCopy();
+  const contractsNow = ethbidContracts();
+  const chainId = useChainId();
   const { address, isConnected } = useAccount();
-  const publicClient = usePublicClient();
-  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient({ chainId: contractsNow?.chainId });
+  const { data: walletClient } = useWalletClient({ chainId: contractsNow?.chainId });
 
   function setBid(n: number) {
     const next = Math.min(MAX_BID_USD, Math.max(min, Math.floor(n)));
@@ -66,6 +68,7 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
       if (!isCategory(category)) throw new Error("Pick a category.");
       if (!isConnected || !address) throw new Error("Connect a wallet first.");
       if (!contracts) throw new Error("ETHBid contracts are not deployed yet.");
+      if (chainId !== contracts.chainId) throw new Error("Wrong network. Switch the wallet to the ETHBid chain.");
       if (!publicClient || !walletClient) throw new Error("Wallet client is not ready.");
       const { hash } = await submitEthbidBid(
         contracts,
@@ -80,10 +83,10 @@ export function ClaimForm({ defaultBid }: { defaultBid: number }) {
         (step) => {
           const asset = contracts.bidAsset;
           const labels = {
-            register: "Registering the product…",
-            approve: `Approving ${asset}…`,
-            bid: `Placing ${asset} bid…`,
-            swap: `Swapping to ${asset}…`,
+            register: "Confirm register in your wallet…",
+            approve: `Confirm ${asset} approve in your wallet…`,
+            bid: `Confirm ${asset} bid in your wallet…`,
+            swap: `Confirm swap in your wallet…`,
             confirmed: "Confirmed.",
           } satisfies Record<EthbidStep, string>;
           setStatus(labels[step]);

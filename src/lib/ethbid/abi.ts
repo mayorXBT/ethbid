@@ -1,4 +1,7 @@
 export const projectRegistryAbi = [
+  { type: "error", name: "UnknownProject", inputs: [] },
+  { type: "error", name: "AlreadyRegistered", inputs: [] },
+  { type: "error", name: "ZeroId", inputs: [] },
   {
     type: "function",
     name: "register",
