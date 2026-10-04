@@ -189,6 +189,15 @@ export function displayHost(url: string): string {
   }
 }
 
+const RESERVED_TLDS = new Set(["example", "invalid", "localhost", "test"]);
+
+export function isReservedDemoHost(host: string): boolean {
+  const h = stripWww(host).toLowerCase();
+  if (!h) return false;
+  const tld = h.split(".").pop() ?? "";
+  return RESERVED_TLDS.has(h) || RESERVED_TLDS.has(tld);
+}
+
 export function withCategory(url: string, slug: string): string {
   if (!isCategory(slug)) return url;
   try {

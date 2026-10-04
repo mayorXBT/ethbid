@@ -48,6 +48,12 @@ export async function readTextLimited(req: Request, maxBytes = 32_768): Promise<
 export const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+export const PROJECT_ID_RE = /^0x[a-f0-9]{64}$/i;
+
+export function isOutboundListingId(id: string): boolean {
+  return UUID_RE.test(id) || PROJECT_ID_RE.test(id);
+}
+
 export function publicHttpUrl(value: string): string | null {
   try {
     const url = new URL(value);
